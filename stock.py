@@ -2,13 +2,25 @@ import yfinance as yf
 
 
 
-dat = yf.Ticker("MSFT")
+def get_stock_info(ticker_symbol):
+    ticker = yf.Ticker(ticker_symbol)
+    price = ticker.info.get('currentPrice')
+
+    earnings_per_share = ticker.info.get('earningsPerShare')
+    trailing_pe = ticker.info.get('trailingPE')
+    forward_pe = ticker.info.get('forwardPE')
+    debt_to_equity = ticker.info.get('debtToEquity')
+    pe_ratio = (price / earnings_per_share)
+    return_on_equity = ticker.info.get('returnOnEquity')
+    free_cashflow = ticker.info.get('freeCashflow')
+
+    return {
+        'price': price,
+        'pe_ratio': pe_ratio,
+        'debt_to_equity': debt_to_equity,
+        'returnonequity': return_on_equity,
+        'free_cashflow': free_cashflow,
+    }
 
 
-dat.info
-dat.calendar
-dat.analyst_price_targets
-dat.quarterly_income_stmt
-dat.history(period='1mo')
-dat.option_chain(dat.options[0]).calls
-print(dat.info)
+print(get_stock_info("AAPL"))
