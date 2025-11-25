@@ -20,25 +20,47 @@ def calculate_cagr(ticker_symbol, years=5):
     return float(cagr * 100)  # Convert to Python float and return as percentage
 
 
-def get_stock_info(ticker_symbol):
-    ticker = yf.Ticker(ticker_symbol)
-    price = ticker.info.get('currentPrice')
-    trailing_pe = ticker.info.get('trailingPE')
-    cagr = calculate_cagr(ticker_symbol, years=5)
-    debt_to_equity = ticker.info.get('debtToEquity')
-    return_on_equity = ticker.info.get('returnOnEquity')
-    free_cashflow = ticker.info.get('freeCashflow')
+def get_stock_info(ticker_symbols):
+    """
+    Get fundamental metrics for one or more stocks.
+    
+    Args:
+        ticker_symbols: Single ticker string (e.g., 'AAPL') or list of tickers (e.g., ['AAPL', 'MSFT', 'GOOGL'])
+    
+    Returns:
+        Dictionary with ticker symbols as keys and their metrics as values
+    """
+    # Handle single ticker as string
+    if isinstance(ticker_symbols, str):
+        ticker_symbols = [ticker_symbols]
+    
+    results = {}
+    
+    for ticker_symbol in ticker_symbols:
+        ticker = yf.Ticker(ticker_symbol)
+        price = ticker.info.get('currentPrice')
+        trailing_pe = ticker.info.get('trailingPE')
+        cagr = calculate_cagr(ticker_symbol, years=5)
+        debt_to_equity = ticker.info.get('debtToEquity')
+        return_on_equity = ticker.info.get('returnOnEquity')
+        free_cashflow = ticker.info.get('freeCashflow')
 
-    return {
-        'price': price,
-        'pe_ratio': trailing_pe,
-        'debt_to_equity': debt_to_equity,
-        '5_year_cagr': cagr,
-        'returnonequity': return_on_equity,
-        'free_cashflow': free_cashflow,
-    }
+        results[ticker_symbol] = {
+            'price': price,
+            'pe_ratio': trailing_pe,
+            'debt_to_equity': debt_to_equity,
+            '5_year_cagr': cagr,
+            'returnonequity': return_on_equity,
+            'free_cashflow': free_cashflow,
+        }
+    
+    return results
 
 
-# Test with AAPL
-print("Stock Info:")
+# Test with single stock
+print("Single stock (AAPL):")
 print(get_stock_info("AAPL"))
+
+# Test with multiple stocks
+print("\nMultiple stocks:")
+print(get_stock_info(["AAPL", "MSFT", "GOOGL"]))
