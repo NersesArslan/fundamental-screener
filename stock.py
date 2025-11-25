@@ -1,4 +1,9 @@
 import yfinance as yf
+import pandas as pd
+
+
+semis = ['NVDA', 'AMD', 'INTC', 'TSM', 'ASML', 'QCOM', 'AVGO', 'MU', 'LRCX', 'KLAC']
+
 
 
 def calculate_cagr(ticker_symbol, years=5):
@@ -56,11 +61,23 @@ def get_stock_info(ticker_symbols):
     
     return results
 
-
-# Test with single stock
-print("Single stock (AAPL):")
-print(get_stock_info("AAPL"))
-
 # Test with multiple stocks
-print("\nMultiple stocks:")
-print(get_stock_info(["AAPL", "MSFT", "GOOGL"]))
+stocks_data = get_stock_info(semis)
+
+# Convert to DataFrame for better display
+df = pd.DataFrame(stocks_data).T  # Transpose so stocks are rows
+df.index.name = 'Ticker'
+
+# Format numeric columns for readability
+df['price'] = df['price'].apply(lambda x: f"${x:.2f}" if x else None)
+df['pe_ratio'] = df['pe_ratio'].apply(lambda x: f"{x:.2f}" if x else None)
+df['debt_to_equity'] = df['debt_to_equity'].apply(lambda x: f"{x:.2f}" if x else None)
+df['5_year_cagr'] = df['5_year_cagr'].apply(lambda x: f"{x:.2f}%" if x else None)
+df['returnonequity'] = df['returnonequity'].apply(lambda x: f"{x:.2%}" if x else None)
+df['free_cashflow'] = df['free_cashflow'].apply(lambda x: f"${x:,.0f}" if x else None)
+
+# Rename columns for better readability
+df.columns = ['Price', 'P/E Ratio', 'Debt/Equity', '5Y CAGR', 'ROE', 'Free Cash Flow']
+
+print("\nStock Fundamentals:")
+print(df.to_string())
