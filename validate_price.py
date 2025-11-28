@@ -7,6 +7,11 @@ Start here to verify data accuracy one metric at a time.
 import yfinance as yf
 import requests
 from datetime import datetime
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 def get_yfinance_price(ticker):
@@ -38,20 +43,30 @@ def get_alphavantage_price(ticker, api_key=None):
         return None, str(e)
 
 
-def get_financialmodelingprep_price(ticker, api_key=None):
-    """Get current price from Financial Modeling Prep (alternative source)."""
+def get_polygon_price(ticker, api_key=None):
+    """Get current price from Polygon.io/Massive.com (alternative source)."""
     if not api_key:
         return None, "No API key provided"
     
     try:
-        url = f"https://financialmodelingprep.com/api/v3/quote/{ticker}?apikey={api_key}"
+        # Use the previous close endpoint (free tier with 5 calls/min limit)
+        url = f"https://api.polygon.io/v2/aggs/ticker/{ticker}/prev?adjusted=true&apiKey={api_key}"
         response = requests.get(url, timeout=5)
         data = response.json()
         
-        if data and len(data) > 0 and "price" in data[0]:
-            return float(data[0]["price"]), None
+        # Check for errors
+        if data.get('status') == 'ERROR':
+            return None, f"API Error: {data.get('error', 'Unknown error')}"
+        
+        if data.get('status') != 'OK':
+            return None, f"API returned status: {data.get('status')}"
+        
+        # Extract close price from results
+        results = data.get('results')
+        if results and len(results) > 0 and 'c' in results[0]:
+            return float(results[0]['c']), None
         else:
-            return None, "No price data returned"
+            return None, f"No price data in response"
     except Exception as e:
         return None, str(e)
 
@@ -84,22 +99,22 @@ def validate_price(ticker, alpha_vantage_key=None, fmp_key=None):
         else:
             print(f"📈 Alpha Vantage:          ❌ {av_error}")
     
-    # Try Financial Modeling Prep
+    # Try Polygon.io
     if fmp_key:
-        fmp_price, fmp_error = get_financialmodelingprep_price(ticker, fmp_key)
-        if fmp_price:
-            print(f"💰 Financial Modeling Prep: ${fmp_price:.2f}")
-            prices.append(fmp_price)
-            sources.append("FMP")
+        polygon_price, polygon_error = get_polygon_price(ticker, fmp_key)
+        if polygon_price:
+            print(f"💰 Polygon.io (Massive):    ${polygon_price:.2f}")
+            prices.append(polygon_price)
+            sources.append("Polygon")
         else:
-            print(f"💰 Financial Modeling Prep: ❌ {fmp_error}")
+            print(f"💰 Polygon.io (Massive):    ❌ {polygon_error}")
     
     # Analysis
     if len(prices) == 1:
         print(f"\n⚠️  Only one source available - cannot cross-validate")
         print(f"💡 Get free API keys:")
         print(f"   - Alpha Vantage: https://www.alphavantage.co/support/#api-key")
-        print(f"   - FMP: https://financialmodelingprep.com/developer/docs/")
+        print(f"   - Polygon.io: https://polygon.io/ (now Massive.com)")
     else:
         print(f"\n📊 Analysis:")
         avg_price = sum(prices) / len(prices)
@@ -131,19 +146,19 @@ if __name__ == "__main__":
     # Test with a few stocks
     tickers = ["AAPL", "MSFT", "GOOGL"]
     
-    # Add your API keys here (optional but recommended)
-    ALPHA_VANTAGE_KEY = None  # Get free key at https://www.alphavantage.co/support/#api-key
-    FMP_KEY = None  # Get free key at https://financialmodelingprep.com/developer/docs/
+    # Load API keys from environment variables
+    ALPHA_VANTAGE_KEY = os.getenv('ALPHA_VANTAGE_KEY')
+    POLYGON_KEY = os.getenv('POLYGON_KEY')
     
     print("\n" + "="*60)
     print("PRICE VALIDATION TEST")
     print("="*60)
     print("\n💡 For better validation, add API keys to this script:")
     print("   - Alpha Vantage (free, 25 calls/day)")
-    print("   - Financial Modeling Prep (free, 250 calls/day)")
+    print("   - Polygon.io/Massive (free, 5 calls/min)")
     
     for ticker in tickers:
-        validate_price(ticker, ALPHA_VANTAGE_KEY, FMP_KEY)
+        validate_price(ticker, ALPHA_VANTAGE_KEY, POLYGON_KEY)
     
     print(f"\n{'='*60}")
     print("MANUAL VERIFICATION")
