@@ -7,7 +7,6 @@ import yfinance as yf
 import pandas as pd
 from abc import ABC, abstractmethod
 from typing import Optional, Dict, List
-from datetime import datetime
 
 
 # ============================================================================
@@ -34,7 +33,7 @@ class StockDataProvider(ABC):
 
 
 class YFinanceProvider(StockDataProvider):
-    """Current implementation using yfinance. Can swap for FMP/Alpha Vantage later."""
+    """Use yfinance for all stock data - free and reliable."""
     
     def get_price(self, ticker: str) -> Optional[float]:
         try:
@@ -43,24 +42,82 @@ class YFinanceProvider(StockDataProvider):
             return None
     
     def get_quarterly_revenue(self, ticker: str) -> Optional[pd.Series]:
-        """Fetch quarterly revenue. yfinance gives us ~4 years of quarters."""
+        """
+        Fetch revenue data - uses TTM when enough quarterly data, otherwise annual.
+        """
         try:
-            fin = yf.Ticker(ticker).quarterly_financials
-            if fin is None or 'Total Revenue' not in fin.index:
+            # Get quarterly data
+            quarterly_fin = yf.Ticker(ticker).quarterly_financials
+            if quarterly_fin is None or 'Total Revenue' not in quarterly_fin.index:
                 return None
-            return fin.loc['Total Revenue'].dropna()
+            
+            quarterly_rev = quarterly_fin.loc['Total Revenue'].dropna()
+            
+            # Need at least 8 quarters (2 years) to calculate meaningful TTM-based CAGR
+            if len(quarterly_rev) < 8:
+                # Fall back to annual data
+                annual_fin = yf.Ticker(ticker).financials
+                if annual_fin is not None and 'Total Revenue' in annual_fin.index:
+                    return annual_fin.loc['Total Revenue'].dropna()
+                return None
+            
+            # Calculate rolling TTM (Trailing Twelve Months)
+            ttm_values = []
+            ttm_dates = []
+            
+            for i in range(len(quarterly_rev) - 3):
+                ttm = quarterly_rev.iloc[i:i+4].sum()
+                ttm_values.append(ttm)
+                ttm_dates.append(quarterly_rev.index[i])
+            
+            if not ttm_values:
+                return None
+            
+            return pd.Series(ttm_values, index=ttm_dates)
         except:
             return None
     
     def get_fundamentals(self, ticker: str) -> Dict[str, Optional[float]]:
-        """Grab the usual suspects from yfinance.info"""
+        """Grab the usual suspects from yfinance.info and cash flow statement"""
         try:
-            info = yf.Ticker(ticker).info
+            stock = yf.Ticker(ticker)
+            info = stock.info
+            
+            # Calculate TTM FCF from quarterly cash flow statement (more reliable)
+            fcf = None
+            try:
+                cf_q = stock.quarterly_cashflow
+                if cf_q is not None and 'Free Cash Flow' in cf_q.index:
+                    fcf_series = cf_q.loc['Free Cash Flow'].dropna()
+                    if len(fcf_series) >= 4:
+                        fcf = fcf_series.iloc[:4].sum()  # TTM
+                        
+                        # Handle currency conversion for international stocks
+                        financial_currency = info.get('financialCurrency', 'USD')
+                        quote_currency = info.get('currency', 'USD')
+                        
+                        # If financials are in different currency, convert using approximate rates
+                        # This is a simple approximation - real solution would use live FX rates
+                        if financial_currency != 'USD' and quote_currency == 'USD':
+                            # Common conversions (approximate rates as of late 2025)
+                            conversion_rates = {
+                                'TWD': 32,    # Taiwan Dollar
+                                'EUR': 0.92,  # Euro
+                                'JPY': 150,   # Japanese Yen
+                                'KRW': 1300,  # Korean Won
+                                'GBP': 0.79,  # British Pound
+                            }
+                            
+                            rate = conversion_rates.get(financial_currency, 1)
+                            fcf = fcf / rate
+            except:
+                pass
+            
             return {
                 'pe_ratio': info.get('trailingPE'),
                 'debt_to_equity': info.get('debtToEquity'),
                 'return_on_equity': info.get('returnOnEquity'),
-                'free_cashflow': info.get('freeCashflow'),
+                'free_cashflow': fcf,
             }
         except:
             return {
@@ -77,40 +134,64 @@ class YFinanceProvider(StockDataProvider):
 
 def calculate_revenue_cagr_from_quarterly(quarterly_revenue: pd.Series, years: int = 5) -> Optional[float]:
     """
-    Calculate revenue CAGR from quarterly data.
-    Workaround for yfinance's 4-year annual limit.
+    Calculate revenue CAGR from quarterly OR annual data.
+    Handles both quarterly and annual revenue series.
     
     Args:
-        quarterly_revenue: Series of quarterly revenues (most recent first)
-        years: Target years for CAGR calculation
+        quarterly_revenue: Series of revenues (most recent first) - can be quarterly or annual
+        years: Target years for CAGR calculation (will use all available data if less than target)
     
     Returns:
         CAGR as percentage, or None if insufficient data
+    
+    Note: Automatically falls back to whatever data is available (typically 3-4 years for most stocks)
     """
     if quarterly_revenue is None or len(quarterly_revenue) < 2:
         return None
     
-    # Need 4 quarters per year + 1 extra to span the period
-    quarters_needed = (years * 4) + 1
+    # Detect if this is annual or quarterly data by checking time gaps
+    if len(quarterly_revenue) >= 2:
+        avg_gap_days = (quarterly_revenue.index[0] - quarterly_revenue.index[-1]).days / (len(quarterly_revenue) - 1)
+        is_annual = avg_gap_days > 200  # If average gap > 200 days, treat as annual
+    else:
+        is_annual = False
     
-    if len(quarterly_revenue) < quarters_needed:
-        # Fallback to whatever we have (minimum 2 quarters = 0.5 years)
+    if is_annual:
+        # Annual data - simpler calculation
         if len(quarterly_revenue) < 2:
             return None
-        quarters_needed = len(quarterly_revenue)
-    
-    # Sum first 4 quarters (most recent year) and last 4 quarters (oldest year)
-    ending_revenue = quarterly_revenue.iloc[:4].sum()
-    beginning_revenue = quarterly_revenue.iloc[quarters_needed-4:quarters_needed].sum()
-    
-    # Calculate actual time span
-    actual_years = (quarterly_revenue.index[0] - quarterly_revenue.index[quarters_needed-1]).days / 365.25
-    
-    if beginning_revenue <= 0 or actual_years <= 0:
-        return None
-    
-    cagr = (ending_revenue / beginning_revenue) ** (1 / actual_years) - 1
-    return float(cagr * 100)
+        
+        # Use all available data
+        ending_revenue = quarterly_revenue.iloc[0]
+        beginning_revenue = quarterly_revenue.iloc[-1]
+        actual_years = (quarterly_revenue.index[0] - quarterly_revenue.index[-1]).days / 365.25
+        
+        if beginning_revenue <= 0 or actual_years <= 0:
+            return None
+        
+        cagr = (ending_revenue / beginning_revenue) ** (1 / actual_years) - 1
+        return float(cagr * 100)
+    else:
+        # Quarterly data - need to group into years
+        quarters_needed = (years * 4) + 1
+        
+        if len(quarterly_revenue) < quarters_needed:
+            if len(quarterly_revenue) < 2:
+                return None
+            quarters_needed = len(quarterly_revenue)
+        
+        # Sum first 4 quarters (most recent year) and last 4 quarters (oldest year)
+        ending_revenue = quarterly_revenue.iloc[:4].sum()
+        beginning_revenue = quarterly_revenue.iloc[quarters_needed-4:quarters_needed].sum()
+        
+        # Calculate actual time span
+        actual_years = (quarterly_revenue.index[0] - quarterly_revenue.index[quarters_needed-1]).days / 365.25
+        
+        if beginning_revenue <= 0 or actual_years <= 0:
+            return None
+        
+        cagr = (ending_revenue / beginning_revenue) ** (1 / actual_years) - 1
+        return float(cagr * 100)
 
 
 def calculate_cagr_generic(values: pd.Series, years: int = 5) -> Optional[float]:
@@ -153,9 +234,10 @@ class StockScreener:
         price = self.provider.get_price(ticker)
         fundamentals = self.provider.get_fundamentals(ticker)
         
-        # Revenue CAGR using quarterly workaround
-        quarterly_rev = self.provider.get_quarterly_revenue(ticker)
-        revenue_cagr = calculate_revenue_cagr_from_quarterly(quarterly_rev, years=5)
+        # Revenue CAGR from TTM (Trailing Twelve Months) data
+        # Note: Uses rolling TTM to capture most current performance
+        ttm_revenue = self.provider.get_quarterly_revenue(ticker)
+        revenue_cagr = calculate_revenue_cagr_from_quarterly(ttm_revenue)
         
         return {
             'price': price,
@@ -186,13 +268,13 @@ def format_screener_output(results: Dict[str, Dict]) -> pd.DataFrame:
     # Format columns for human consumption
     df['price'] = df['price'].apply(lambda x: f"${x:.2f}" if x else None)
     df['pe_ratio'] = df['pe_ratio'].apply(lambda x: f"{x:.2f}" if x else None)
-    df['debt_to_equity'] = df['debt_to_equity'].apply(lambda x: f"{x:.2f}" if x else None)
+    df['debt_to_equity'] = df['debt_to_equity'].apply(lambda x: f"{x:.2f}%" if x else None)
     df['5_year_cagr'] = df['5_year_cagr'].apply(lambda x: f"{x:.2f}%" if x else None)
     df['returnonequity'] = df['returnonequity'].apply(lambda x: f"{x:.2%}" if x else None)
     df['free_cashflow'] = df['free_cashflow'].apply(lambda x: f"${x:,.0f}" if x else None)
     
     # Readable column names
-    df.columns = ['Price', 'P/E Ratio', 'Debt/Equity', '5Y CAGR', 'ROE', 'Free Cash Flow']
+    df.columns = ['Price', 'P/E Ratio', 'Debt/Equity', '3Y CAGR', 'ROE', 'Free Cash Flow (TTM)']
     
     return df
 
@@ -205,117 +287,18 @@ if __name__ == "__main__":
     # Your watchlist
     semis = ['NVDA', 'AMD', 'INTC', 'TSM', 'ASML', 'QCOM', 'AVGO', 'MU', 'LRCX', 'KLAC']
     
-    # Instantiate with yfinance (swap for FMP later by changing one line)
+    # Use YFinanceProvider - calculates CAGR from available quarterly data
+    # Note: For some stocks like NVDA, this gives us ~3-4 years of data
+    # which is still useful for growth analysis
     provider = YFinanceProvider()
     screener = StockScreener(provider)
     
     # Run the screen
+    print("\nFetching stock data (calculating CAGR from TTM revenue)...")
     stocks_data = screener.screen_multiple(semis)
     
     # Pretty print
     df = format_screener_output(stocks_data)
     print("\nStock Fundamentals:")
     print(df.to_string())
-
-# def calculate_revenue_cagr(ticker_symbol, years=5):
-#     """Calculate Revenue Compound Annual Growth Rate for a stock over specified years."""
-#     ticker = yf.Ticker(ticker_symbol)
-
-#     # Get annual financial statements
-#     fin = ticker.financials
-#     if fin is None or "Total Revenue" not in fin.index:
-#         return None
-    
-#     rev = fin.loc["Total Revenue"].dropna()  # Pandas Series of revenues, drop NaN
-
-#     # yfinance typically returns only 4 years of annual data
-#     # Use available data or fallback to shorter period
-#     if len(rev) < 2:
-#         return None
-    
-#     # Use the requested years or whatever we have available
-#     actual_periods = min(years, len(rev) - 1)
-    
-#     ending_rev = rev.iloc[0]
-#     beginning_rev = rev.iloc[actual_periods]
-
-#     actual_years = (rev.index[0] - rev.index[actual_periods]).days / 365.25
-#     cagr = (ending_rev / beginning_rev) ** (1 / actual_years) - 1
-#     return float(cagr * 100)
-
-
-# def calculate_cagr(ticker_symbol, years=5):
-#     """Calculate Compound Annual Growth Rate for a stock over specified years."""
-#     ticker = yf.Ticker(ticker_symbol)
-    
-#     # Get historical data for the specified period
-#     hist = ticker.history(period=f"{years}y")
-    
-#     if len(hist) < 2:
-#         return None  # Not enough data
-    
-#     beginning_value = hist['Close'].iloc[0]
-#     ending_value = hist['Close'].iloc[-1]
-    
-#     # CAGR formula: ((Ending / Beginning) ^ (1 / Years)) - 1
-#     cagr = (ending_value / beginning_value) ** (1 / years) - 1
-    
-#     return float(cagr * 100)  # Convert to Python float and return as percentage
-
-
-# def get_stock_info(ticker_symbols):
-#     """
-#     Get fundamental metrics for one or more stocks.
-    
-#     Args:
-#         ticker_symbols: Single ticker string (e.g., 'AAPL') or list of tickers (e.g., ['AAPL', 'MSFT', 'GOOGL'])
-    
-#     Returns:
-#         Dictionary with ticker symbols as keys and their metrics as values
-#     """
-#     # Handle single ticker as string
-#     if isinstance(ticker_symbols, str):
-#         ticker_symbols = [ticker_symbols]
-    
-#     results = {}
-    
-#     for ticker_symbol in ticker_symbols:
-#         ticker = yf.Ticker(ticker_symbol)
-#         price = ticker.info.get('currentPrice')
-#         trailing_pe = ticker.info.get('trailingPE')
-#         cagr = calculate_revenue_cagr(ticker_symbol, years=5)
-#         debt_to_equity = ticker.info.get('debtToEquity')
-#         return_on_equity = ticker.info.get('returnOnEquity')
-#         free_cashflow = ticker.info.get('freeCashflow')
-
-#         results[ticker_symbol] = {
-#             'price': price,
-#             'pe_ratio': trailing_pe,
-#             'debt_to_equity': debt_to_equity,
-#             '5_year_cagr': cagr,
-#             'returnonequity': return_on_equity,
-#             'free_cashflow': free_cashflow,
-#         }
-    
-#     return results
-
-# # Test with multiple stocks
-# stocks_data = get_stock_info(semis)
-
-# # Convert to DataFrame for better display
-# df = pd.DataFrame(stocks_data).T  # Transpose so stocks are rows
-# df.index.name = 'Ticker'
-
-# # Format numeric columns for readability
-# df['price'] = df['price'].apply(lambda x: f"${x:.2f}" if x else None)
-# df['pe_ratio'] = df['pe_ratio'].apply(lambda x: f"{x:.2f}" if x else None)
-# df['debt_to_equity'] = df['debt_to_equity'].apply(lambda x: f"{x:.2f}" if x else None)
-# df['5_year_cagr'] = df['5_year_cagr'].apply(lambda x: f"{x:.2f}%" if x else None)
-# df['returnonequity'] = df['returnonequity'].apply(lambda x: f"{x:.2%}" if x else None)
-# df['free_cashflow'] = df['free_cashflow'].apply(lambda x: f"${x:,.0f}" if x else None)
-
-# # Rename columns for better readability
-# df.columns = ['Price', 'P/E Ratio', 'Debt/Equity', '5Y CAGR', 'ROE', 'Free Cash Flow']
-
-# print("\nStock Fundamentals:")
-# print(df.to_string())
+    print("\nNote: Revenue CAGR calculated from Trailing Twelve Months (TTM) data")
