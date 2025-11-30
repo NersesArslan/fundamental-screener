@@ -1,39 +1,41 @@
 from typing import Optional, Dict, List
 import pandas as pd
-from calculation_functions import calculate_revenue_cagr_from_quarterly
 from stock_providers import StockDataProvider
+from metrics import Metric, get_default_metrics
 
 # ============================================================================
 # BUSINESS LOGIC - Screen stocks with your criteria
 # ============================================================================
 
 class StockScreener:
-    """Orchestrates data fetching and metric calculation."""
+    """Orchestrates data fetching and metric calculation with modular metrics."""
     
-    def __init__(self, provider: StockDataProvider):
+    def __init__(self, provider: StockDataProvider, metrics: List[Metric] = None):
+        """
+        Args:
+            provider: Data source (YFinanceProvider, etc.)
+            metrics: List of Metric objects to calculate. If None, uses default set.
+        """
         self.provider = provider
+        self.metrics = metrics if metrics is not None else get_default_metrics()
     
     def screen_stock(self, ticker: str) -> Dict[str, Optional[float]]:
         """
         Fetch and calculate all metrics for a single stock.
         Returns a clean dict ready for your DataFrame.
         """
-        price = self.provider.get_price(ticker)
-        fundamentals = self.provider.get_fundamentals(ticker)
+        results = {}
         
-        # Revenue CAGR from TTM (Trailing Twelve Months) data
-        # Note: Uses rolling TTM to capture most current performance
-        ttm_revenue = self.provider.get_quarterly_revenue(ticker)
-        revenue_cagr = calculate_revenue_cagr_from_quarterly(ttm_revenue)
+        # Calculate each metric
+        for metric in self.metrics:
+            try:
+                value = metric.calculate(ticker, self.provider)
+                results[metric.get_key()] = value
+            except Exception as e:
+                # If a metric fails, set to None rather than crashing
+                results[metric.get_key()] = None
         
-        return {
-            'price': price,
-            'pe_ratio': fundamentals['pe_ratio'],
-            'debt_to_equity': fundamentals['debt_to_equity'],
-            '5_year_cagr': revenue_cagr,
-            'returnonequity': fundamentals['return_on_equity'],
-            'free_cashflow': fundamentals['free_cashflow'],
-        }
+        return results
     
     def screen_multiple(self, tickers: List[str]) -> Dict[str, Dict]:
         """Screen a list of tickers. Returns {ticker: metrics_dict}."""
@@ -41,3 +43,7 @@ class StockScreener:
         for ticker in tickers:
             results[ticker] = self.screen_stock(ticker)
         return results
+    
+    def get_metric_names(self) -> Dict[str, str]:
+        """Return mapping of metric keys to display names."""
+        return {metric.get_key(): metric.get_name() for metric in self.metrics}
