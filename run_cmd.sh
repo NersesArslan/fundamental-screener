@@ -3,7 +3,7 @@
 # Usage: ./run_cmd.sh ls -la /tmp
 
 if [ $# -eq 0 ]; then
-  echo "I'm trying to learn how to script with bash!"
+  python3 main.py
   exit 1
 fi
 
