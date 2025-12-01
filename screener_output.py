@@ -30,6 +30,8 @@ def format_screener_output(results: Dict[str, Dict], metric_names: Dict[str, str
             df[col] = df[col].apply(lambda x: f"{x:.2%}" if pd.notna(x) else None)
         elif col == 'free_cashflow':
             df[col] = df[col].apply(lambda x: f"${x:,.0f}" if pd.notna(x) else None)
+        elif col == 'fcf_yield':
+            df[col] = df[col].apply(lambda x: f"{x:.2f}%" if pd.notna(x) else None)
     
     # Rename columns to display names if provided
     if metric_names:

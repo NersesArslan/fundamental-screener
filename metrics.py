@@ -129,6 +129,38 @@ class FreeCashFlowMetric(Metric):
         return "free_cashflow"
 
 
+class FCFYieldMetric(Metric):
+    """FCF Yield = (Free Cash Flow / Market Cap) * 100."""
+    
+    def calculate(self, ticker: str, provider: StockDataProvider) -> Optional[float]:
+        fundamentals = provider.get_fundamentals(ticker)
+        fcf = fundamentals['free_cashflow']
+        
+        if fcf is None:
+            return None
+        
+        # Get market cap from price * shares outstanding
+        # We can get this from yfinance info
+        try:
+            import yfinance as yf
+            info = yf.Ticker(ticker).info
+            market_cap = info.get('marketCap')
+            
+            if market_cap and market_cap > 0:
+                fcf_yield = (fcf / market_cap) * 100
+                return fcf_yield
+        except:
+            pass
+        
+        return None
+    
+    def get_name(self) -> str:
+        return "FCF Yield"
+    
+    def get_key(self) -> str:
+        return "fcf_yield"
+
+
 # ============================================================================
 # DEFAULT METRIC SETS - Pre-configured collections
 # ============================================================================
@@ -142,6 +174,7 @@ def get_default_metrics():
         RevenueCagr3YearMetric(),  # Using 3-year since yfinance has limited data
         ROEMetric(),
         FreeCashFlowMetric(),
+        FCFYieldMetric(),
     ]
 
 
