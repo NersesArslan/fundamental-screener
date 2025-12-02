@@ -51,7 +51,7 @@ SCORING_WEIGHTS = {
 if __name__ == "__main__":
     # Your watchlist
     semis = ['NVDA', 'AMD', 'INTC', 'TSM', 'ASML', 'QCOM', 'AVGO', 'MU', 'LRCX', 'KLAC']
-    
+    tech = ['MSFT', 'GOOGL', 'AAPL', 'AMZN', 'META', 'ORCL', 'CRM']
     # Data provider
     provider = YFinanceProvider()
     
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     screener = StockScreener(provider, metrics=get_default_metrics())
  
     print("\nFetching stock data...")
-    stocks_data = screener.screen_multiple(semis)
+    stocks_data = screener.screen_multiple(tech)
     
     # Display raw fundamentals
     metric_names = screener.get_metric_names()
