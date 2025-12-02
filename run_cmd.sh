@@ -3,8 +3,8 @@
 # Usage: ./run_cmd.sh ls -la /tmp
 
 if [ $# -eq 0 ]; then
-  python3 main.py
-  exit 1
+  /home/nerses/git-practice/stockify/tractatus/bin/python3 main.py
+  exit 0
 fi
 
 # Execute the command exactly as given (preserves args and quoting)
