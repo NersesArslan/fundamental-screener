@@ -31,32 +31,29 @@ from stock_scorer import StockScorer
 
 
 # ============================================================================
-# SCORING WEIGHTS - Core universal metrics
+# SCORING WEIGHTS - Tailored per industry
 # ============================================================================
 
-CORE_SCORING_WEIGHTS = {
-    'ev_to_fcf': 0.20,           # Lower is better - cheaper valuation
-    'roic': 0.20,                # Higher is better - better returns
-    'revenue_cagr': 0.15,        # Higher is better - growth
-    'operating_margin': 0.15,    # Higher is better - efficiency
-    'fcf_margin': 0.15,          # Higher is better - cash generation
-    'net_debt_to_ebitda': 0.10,  # Lower is better - less leverage
-    'interest_coverage': 0.05,   # Higher is better - safer debt
-}
+# NOTE: Core metrics have different weights across industries based on what matters most.
+# For example, semiconductors heavily weight margins and capital efficiency.
+# We'll add more industry-specific weight profiles as we expand.
 
-# Semiconductor-specific weights (adjusted to sum to 1.0)
 SEMIS_SCORING_WEIGHTS = {
-    'ev_to_fcf': 0.15,           # Lower is better - cheaper valuation
-    'roic': 0.15,                # Higher is better - better returns
-    'revenue_cagr': 0.12,        # Higher is better - growth
-    'operating_margin': 0.12,    # Higher is better - efficiency
-    'fcf_margin': 0.12,          # Higher is better - cash generation
-    'net_debt_to_ebitda': 0.08,  # Lower is better - less leverage
-    'interest_coverage': 0.04,   # Higher is better - safer debt
-    'capex_intensity': 0.07,     # Context-dependent for semis
-    'inventory_turnover': 0.05,  # Higher is better
-    'gross_margin': 0.10,        # Higher is better - pricing power
+    # Core metrics (adjusted for semiconductor industry)
+    'ev_to_fcf': 0.18,           # Lower is better - valuation
+    'roic': 0.18,                # Higher is better - capital efficiency (critical for semis)
+    'revenue_cagr': 0.13,        # Higher is better - growth
+    'operating_margin': 0.13,    # Higher is better - operational efficiency
+    'fcf_margin': 0.13,          # Higher is better - cash generation
+    'net_debt_to_ebitda': 0.07,  # Lower is better - leverage
+    'interest_coverage': 0.05,   # Higher is better - debt safety
+    
+    # Semiconductor-specific metrics
+    'capex_intensity': 0.05,     # Context-dependent - high CapEx expected but efficiency matters
+    'inventory_turnover': 0.08,  # Higher is better - demand signals
+    'gross_margin': 0.10,        # Higher is better - pricing power/moat indicator
 }
+# Sum = 1.00 ✓
 
 # Note: Adjust core weights proportionally when adding industry metrics
 
