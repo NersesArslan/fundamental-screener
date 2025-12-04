@@ -1,47 +1,64 @@
 """
-Stock Screener - Value investing focused
-Elegantly decoupled for future data source flexibility.
+Stock Screener - Industry-Aware Universal Metrics
 
-MODULAR METRICS SYSTEM:
-- Easily add/remove metrics by customizing the metrics list
-- Pre-configured sets: get_default_metrics(), get_growth_metrics(), get_value_metrics()
-- Or create your own custom list!
+ARCHITECTURE:
+- Core universal metrics work across all industries
+- Industry-specific overrides add specialized metrics
+- Industry-aware scoring system
 
-SCORING SYSTEM:
-- Normalize metrics and calculate weighted composite scores
-- Adjust weights in the SCORING_WEIGHTS dictionary below
-- Weights should sum to 1.0
+CORE UNIVERSAL METRICS (7):
+1. EV/FCF - Valuation relative to cash generation
+2. ROIC - Returns on invested capital (not distorted by buybacks)
+3. Revenue CAGR - Growth trajectory
+4. Operating Margin - Operational efficiency
+5. FCF Margin - Cash generation efficiency
+6. Net Debt/EBITDA - Leverage (handles negative book equity)
+7. Interest Coverage - Debt servicing ability
+
+INDUSTRY SUPPORT:
+- 'semis': Adds CapEx Intensity, Inventory Turnover, Gross Margin
+- 'tech': Adds R&D Intensity, Net Debt/FCF
+- More industries coming soon!
+
+USAGE:
+    screener = StockScreener(provider, industry='semis')
+    screener = StockScreener(provider, industry='tech')
 """
 from stock_providers import YFinanceProvider
 from stock_screener import StockScreener
 from screener_output import format_screener_output
 from stock_scorer import StockScorer
-from metrics import (
-    get_default_metrics, 
-    get_growth_metrics, 
-    get_value_metrics,
-    PriceMetric,
-    PERatioMetric,
-    RevenueCagr3YearMetric,
-    ROEMetric,
-    FreeCashFlowMetric,
-)
 
 
 # ============================================================================
-# SCORING WEIGHTS - Adjust these to match your investment strategy
+# SCORING WEIGHTS - Core universal metrics
 # ============================================================================
 
-SCORING_WEIGHTS = {
-    'pe_ratio': 0.10,           # Lower P/E = better value
-    'debt_to_equity': 0.15,     # Lower debt = better
-    '3_year_cagr': 0.15,        # Higher growth = better
-    'returnonequity': 0.20,     # Higher ROE = better profitability
-    'free_cashflow': 0.10,      # Higher FCF = better
-    'fcf_yield': 0.30,          # Higher yield = better
+CORE_SCORING_WEIGHTS = {
+    'ev_to_fcf': 0.20,           # Lower is better - cheaper valuation
+    'roic': 0.20,                # Higher is better - better returns
+    'revenue_cagr': 0.15,        # Higher is better - growth
+    'operating_margin': 0.15,    # Higher is better - efficiency
+    'fcf_margin': 0.15,          # Higher is better - cash generation
+    'net_debt_to_ebitda': 0.10,  # Lower is better - less leverage
+    'interest_coverage': 0.05,   # Higher is better - safer debt
 }
 
-# Note: Weights should sum to 1.0 (current sum: {sum(SCORING_WEIGHTS.values())})
+# Semiconductor-specific weights (adjusted to sum to 1.0)
+SEMIS_SCORING_WEIGHTS = {
+    'ev_to_fcf': 0.15,           # Lower is better - cheaper valuation
+    'roic': 0.15,                # Higher is better - better returns
+    'revenue_cagr': 0.12,        # Higher is better - growth
+    'operating_margin': 0.12,    # Higher is better - efficiency
+    'fcf_margin': 0.12,          # Higher is better - cash generation
+    'net_debt_to_ebitda': 0.08,  # Lower is better - less leverage
+    'interest_coverage': 0.04,   # Higher is better - safer debt
+    'capex_intensity': 0.07,     # Context-dependent for semis
+    'inventory_turnover': 0.05,  # Higher is better
+    'gross_margin': 0.10,        # Higher is better - pricing power
+}
+
+# Note: Adjust core weights proportionally when adding industry metrics
 
 
 # ============================================================================
@@ -49,21 +66,28 @@ SCORING_WEIGHTS = {
 # ============================================================================
 
 if __name__ == "__main__":
-    # Your watchlist
+    # ========================================================================
+    # WATCHLISTS - Organize by industry
+    # ========================================================================
     semis = ['NVDA', 'AMD', 'INTC', 'TSM', 'ASML', 'QCOM', 'AVGO', 'MU', 'LRCX', 'KLAC']
-    tech = ['MSFT', 'GOOGL', 'AAPL', 'AMZN', 'META', 'ORCL', 'CRM']
+    big_tech = ['MSFT', 'GOOGL', 'AAPL', 'AMZN', 'META', 'ORCL', 'CRM']
+    
     # Data provider
     provider = YFinanceProvider()
     
     # ========================================================================
-    # CHOOSE YOUR METRICS - Uncomment the one you want!
+    # INDUSTRY-AWARE SCREENING
     # ========================================================================
     
-
-    screener = StockScreener(provider, metrics=get_default_metrics())
- 
+    # Screen semiconductors with industry-specific metrics
+    print("\n" + "="*70)
+    print("SEMICONDUCTOR SCREENING (Core + Semis Metrics)")
+    print("="*70)
+    
+    screener = StockScreener(provider, industry='semis')
+    
     print("\nFetching stock data...")
-    stocks_data = screener.screen_multiple(tech)
+    stocks_data = screener.screen_multiple(semis)
     
     # Display raw fundamentals
     metric_names = screener.get_metric_names()
@@ -78,7 +102,7 @@ if __name__ == "__main__":
     print("COMPOSITE SCORES (0-100 scale, weighted by investment criteria)")
     print("="*70)
     
-    scorer = StockScorer(SCORING_WEIGHTS, normalization='minmax')
+    scorer = StockScorer(SEMIS_SCORING_WEIGHTS, normalization='minmax')
     scores = scorer.calculate_scores(stocks_data)
     
     # Sort by score (highest first)
@@ -91,5 +115,7 @@ if __name__ == "__main__":
         else:
             print(f"  {rank}. {ticker:6} - Score: N/A (missing data)")
     
-    print("\n💡 Tip: Edit SCORING_WEIGHTS in main.py to adjust your scoring criteria!")
-    print("💡 Tip: Set a weight to 0 to exclude that metric from scoring.")
+    print("\n💡 Tip: Edit SEMIS_SCORING_WEIGHTS in main.py to adjust your scoring criteria!")
+    print(f"💡 Tip: Change industry='semis' to industry='tech' for big tech screening.")
+    print(f"💡 Available industries: 'semis', 'tech'")
+

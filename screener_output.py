@@ -18,7 +18,14 @@ def format_screener_output(results: Dict[str, Dict], metric_names: Dict[str, str
     
     # Format columns based on type
     for col in df.columns:
-        if col == 'price':
+        # Ratios (no unit)
+        if col in ['ev_to_fcf', 'net_debt_to_ebitda', 'net_debt_to_fcf', 'interest_coverage', 'inventory_turnover']:
+            df[col] = df[col].apply(lambda x: f"{x:.2f}" if pd.notna(x) else None)
+        # Percentages
+        elif col in ['roic', 'revenue_cagr', 'operating_margin', 'fcf_margin', 'capex_intensity', 'rnd_intensity', 'gross_margin']:
+            df[col] = df[col].apply(lambda x: f"{x:.2f}%" if pd.notna(x) else None)
+        # Legacy format support
+        elif col == 'price':
             df[col] = df[col].apply(lambda x: f"${x:.2f}" if pd.notna(x) else None)
         elif col == 'pe_ratio':
             df[col] = df[col].apply(lambda x: f"{x:.2f}" if pd.notna(x) else None)
