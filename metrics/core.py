@@ -196,18 +196,25 @@ class InterestCoverageMetric(Metric):
     Interest Coverage = EBIT / Interest Expense
     Measures ability to service debt.
     Higher is better (more cushion to pay interest).
+    
+    Returns None if interest expense data is missing/invalid (NaN, None, or near-zero).
+    The scorer will impute using peer group median.
     """
     
     def calculate(self, ticker: str, provider: StockDataProvider) -> Optional[float]:
+        import math
+        
         data = provider.get_leverage_data(ticker)
         
         ebit = data.get('ebit')
         interest_expense = data.get('interest_expense')
         
-        if ebit and interest_expense:
-            if interest_expense > 0:
+        if ebit is not None and interest_expense is not None:
+            # Check for valid interest expense (not NaN, not too small)
+            if not math.isnan(interest_expense) and interest_expense > 0:
                 return ebit / interest_expense
         
+        # Missing or invalid data - return None (will be filled with median)
         return None
     
     def get_name(self) -> str:

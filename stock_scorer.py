@@ -116,12 +116,13 @@ class StockScorer:
         
         return normalized
     
-    def calculate_scores(self, stocks_data: Dict[str, Dict]) -> Dict[str, Optional[float]]:
+    def calculate_scores(self, stocks_data: Dict[str, Dict], fill_missing_with_median: bool = True) -> Dict[str, Optional[float]]:
         """
         Calculate weighted composite scores for all stocks.
         
         Args:
             stocks_data: Dict of {ticker: {metric_key: value}}
+            fill_missing_with_median: If True, replaces None values with peer group median
         
         Returns:
             Dict of {ticker: total_score} (0-100 scale)
@@ -139,6 +140,13 @@ class StockScorer:
             
             # Extract values for this metric across all stocks
             values = [stocks_data[ticker].get(metric_key) for ticker in tickers]
+            
+            # Fill missing values with median if requested
+            if fill_missing_with_median:
+                valid_values = [v for v in values if v is not None]
+                if valid_values:
+                    median = sorted(valid_values)[len(valid_values) // 2]
+                    values = [v if v is not None else median for v in values]
             
             # Determine direction
             higher_better = self.higher_is_better.get(metric_key, True)
