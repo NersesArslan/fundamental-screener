@@ -40,18 +40,14 @@ from stock_scorer import StockScorer
 
 SEMIS_SCORING_WEIGHTS = {
     # Core metrics (adjusted for semiconductor industry)
-    'ev_to_fcf': 0.18,           # Lower is better - valuation
-    'roic': 0.18,                # Higher is better - capital efficiency (critical for semis)
-    'revenue_cagr': 0.13,        # Higher is better - growth
-    'operating_margin': 0.13,    # Higher is better - operational efficiency
-    'fcf_margin': 0.13,          # Higher is better - cash generation
-    'net_debt_to_ebitda': 0.07,  # Lower is better - leverage
-    'interest_coverage': 0.05,   # Higher is better - debt safety
+    'ev_to_fcf': 0.15,           # Lower is better - valuation
+    'roic': 0.20,                # Higher is better - capital efficiency (critical for semis)
+    'revenue_cagr': 0.15,        # Higher is better - growth
+    'operating_margin': 0.15,    # Higher is better - operational efficiency
+    'fcf_margin': 0.15,          # Higher is better - cash generation
+    'net_debt_to_ebitda': 0.10,  # Lower is better - leverage
+    'interest_coverage': 0.10,   # Higher is better - debt safety
     
-    # Semiconductor-specific metrics
-    'capex_intensity': 0.05,     # Context-dependent - high CapEx expected but efficiency matters
-    'inventory_turnover': 0.08,  # Higher is better - demand signals
-    'gross_margin': 0.10,        # Higher is better - pricing power/moat indicator
 }
 # Sum = 1.00 ✓
 
@@ -81,10 +77,10 @@ if __name__ == "__main__":
     print("SEMICONDUCTOR SCREENING (Core + Semis Metrics)")
     print("="*70)
     
-    screener = StockScreener(provider, industry='semis')
+    screener = StockScreener(provider, industry='None')
     
     print("\nFetching stock data...")
-    stocks_data = screener.screen_multiple(semis)
+    stocks_data = screener.screen_multiple(semis, verbose=True)
     
     # Display raw fundamentals
     metric_names = screener.get_metric_names()

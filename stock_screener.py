@@ -1,5 +1,6 @@
 from typing import Optional, Dict, List
 import pandas as pd
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from stock_providers import StockDataProvider
 from metrics.core import Metric, get_core_metrics
 
@@ -73,11 +74,50 @@ class StockScreener:
         
         return results
     
-    def screen_multiple(self, tickers: List[str]) -> Dict[str, Dict]:
-        """Screen a list of tickers. Returns {ticker: metrics_dict}."""
+    def screen_multiple(self, tickers: List[str], verbose: bool = True, parallel: bool = True, max_workers: int = 5) -> Dict[str, Dict]:
+        """
+        Screen a list of tickers. Returns {ticker: metrics_dict}.
+        
+        Args:
+            tickers: List of ticker symbols
+            verbose: If True, prints progress as each ticker is processed
+            parallel: If True, fetches multiple tickers concurrently (much faster!)
+            max_workers: Number of parallel threads (default 5 to avoid rate limits)
+        """
+        if not parallel:
+            # Sequential processing (original behavior)
+            results = {}
+            total = len(tickers)
+            for i, ticker in enumerate(tickers, 1):
+                if verbose:
+                    print(f"  [{i}/{total}] Fetching {ticker}...", flush=True)
+                results[ticker] = self.screen_stock(ticker)
+            return results
+        
+        # Parallel processing - much faster!
         results = {}
-        for ticker in tickers:
-            results[ticker] = self.screen_stock(ticker)
+        total = len(tickers)
+        completed = 0
+        
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # Submit all jobs
+            future_to_ticker = {executor.submit(self.screen_stock, ticker): ticker for ticker in tickers}
+            
+            # Process as they complete
+            for future in as_completed(future_to_ticker):
+                ticker = future_to_ticker[future]
+                completed += 1
+                
+                if verbose:
+                    print(f"  [{completed}/{total}] ✓ {ticker}", flush=True)
+                
+                try:
+                    results[ticker] = future.result()
+                except Exception as e:
+                    if verbose:
+                        print(f"    ⚠️  Error fetching {ticker}: {e}", flush=True)
+                    results[ticker] = {metric.get_key(): None for metric in self.metrics}
+        
         return results
     
     def get_metric_names(self) -> Dict[str, str]:
