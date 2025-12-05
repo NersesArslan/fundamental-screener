@@ -43,13 +43,20 @@ class EVToFCFMetric(Metric):
     """
     Enterprise Value / Free Cash Flow
     Lower is better - shows how expensive the company is relative to cash generation.
+    
+    SMART FALLBACK: If FCF is negative/zero (cash burning), return 9999 as a penalty
+    value. This ensures the stock gets scored (rather than excluded) but receives
+    the worst possible score for this metric.
     """
     
     def calculate(self, ticker: str, provider: StockDataProvider) -> Optional[float]:
         data = provider.get_valuation_data(ticker)
-        if data['enterprise_value'] and data['free_cashflow']:
+        if data['enterprise_value'] and data['free_cashflow'] is not None:
             if data['free_cashflow'] > 0:
                 return data['enterprise_value'] / data['free_cashflow']
+            else:
+                # Negative/zero FCF = cash burning = worst possible score
+                return 100
         return None
     
     def get_name(self) -> str:

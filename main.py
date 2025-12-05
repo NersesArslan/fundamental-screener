@@ -63,7 +63,7 @@ if __name__ == "__main__":
     # WATCHLISTS - Organize by industry
     # ========================================================================
     semis = ['NVDA', 'AMD', 'INTC', 'TSM', 'ASML', 'QCOM', 'AVGO', 'MU', 'LRCX', 'KLAC']
-    big_tech = ['MSFT', 'GOOGL', 'AAPL', 'AMZN', 'META', 'ORCL', 'CRM']
+    big_tech = ['MSFT', 'GOOGL', 'AAPL', 'AMZN', 'META', 'ORCL', 'CRM', 'ADBE', 'IBM']
     
     # Data provider
     provider = YFinanceProvider()
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     screener = StockScreener(provider, industry='None')
     
     print("\nFetching stock data...")
-    stocks_data = screener.screen_multiple(semis, verbose=True)
+    stocks_data = screener.screen_multiple(big_tech, verbose=True)
     
     # Display raw fundamentals
     metric_names = screener.get_metric_names()
