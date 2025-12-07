@@ -212,14 +212,22 @@ class InterestCoverageMetric(Metric):
     Measures ability to service debt.
     Higher is better (more cushion to pay interest).
     
-    Returns None if interest expense data is missing/invalid (NaN, None, or near-zero).
-    The scorer will impute using peer group median (Category 2: Missing Data).
+    Special handling per Hal's framework:
+    - Returns NaN if leverage is negligible (Debt/EBITDA < 0.5) → Case 1: N/A, redistribute weight
+    - Returns None if data is missing but leverage exists → Case 2: Missing data, impute median
     """
     
-    def is_not_applicable(self, value, ticker_data):
-        interest_expense = ticker_data.get("interest_expense")
-        if interest_expense in (None, 0):
+    def is_not_applicable(self, value, ticker, provider):
+        """
+        Case 1: Interest Coverage is N/A when company has negligible leverage.
+        Uses Debt/EBITDA < 0.5 threshold (Hal's suggestion).
+        """
+        import math
+        
+        # Check if value is NaN (signals N/A from calculate())
+        if value is not None and math.isnan(value):
             return True
+        
         return False
     
     def calculate(self, ticker: str, provider: StockDataProvider) -> Optional[float]:
@@ -229,13 +237,33 @@ class InterestCoverageMetric(Metric):
         
         ebit = data.get('ebit')
         interest_expense = data.get('interest_expense')
+        total_debt = data.get('total_debt')
+        ebitda = data.get('ebitda')
         
-        if ebit is not None and interest_expense is not None:
-            # Check for valid interest expense (not NaN, not too small)
-            if not math.isnan(interest_expense) and interest_expense > 0:
+        # Case 1: Check if leverage is negligible (Debt/EBITDA < 0.5)
+        # If so, Interest Coverage is not a meaningful metric → return NaN
+        if total_debt is not None and ebitda is not None and ebitda > 0:
+            debt_to_ebitda = total_debt / ebitda
+            if debt_to_ebitda < 0.5:
+                return float('nan')  # N/A - redistribute weight
+        
+        # Case 2: Has meaningful debt but interest expense data is missing/invalid
+        if ebit is not None:
+            if interest_expense is None or math.isnan(interest_expense):
+                # Company has leverage but data is missing → return None for median imputation
+                return None
+            
+            # Normal case: calculate interest coverage
+            if interest_expense > 0:
                 return ebit / interest_expense
+            else:
+                # Interest expense is zero but debt exists → check leverage again
+                if total_debt is not None and ebitda is not None and ebitda > 0:
+                    if (total_debt / ebitda) < 0.5:
+                        return float('nan')  # Negligible leverage
+                return None  # Data issue
         
-        # Missing or invalid data - return None (will be filled with median)
+        # EBIT missing - can't calculate
         return None
     
     def get_name(self) -> str:

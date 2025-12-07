@@ -27,13 +27,22 @@ class StockScorer:
         # Define which metrics are "higher is better"
         # Lower is better metrics will be inverted during scoring
         self.higher_is_better = {
-            'price': False,  # Debatable, but generally lower price = better value
-            'pe_ratio': False,  # Lower P/E = better value
-            'debt_to_equity': False,  # Lower debt = better
-            'revenue_cagr_3year': True,  # Higher growth = better
-            'returnonequity': True,  # Higher ROE = better
-            'free_cashflow': True,  # Higher FCF = better
-            'fcf_yield': True,  # Higher yield = better
+            # Core metrics
+            'ev_to_fcf': False,  # Lower is better - cheaper valuation
+            'revenue_cagr': True,  # Higher is better - faster growth
+            'operating_margin': True,  # Higher is better - more efficient operations
+            'fcf_margin': True,  # Higher is better - better cash generation
+            'net_debt_to_ebitda': False,  # Lower is better - less leveraged
+            'interest_coverage': True,  # Higher is better - safer debt servicing
+            
+            # Industry-specific metrics (semis)
+            'capex_intensity': False,  # Lower is better - more capital efficient
+            'inventory_turnover': True,  # Higher is better - better working capital management
+            'gross_margin': True,  # Higher is better - pricing power
+            
+            # Industry-specific metrics (tech)
+            'rnd_intensity': True,  # Higher is better - more innovation investment (context-dependent)
+            'net_debt_to_fcf': False,  # Lower is better - less debt burden
         }
         
         # Validate weights sum to ~1.0
@@ -49,8 +58,10 @@ class StockScorer:
             values: List of metric values for all stocks
             higher_is_better: If False, inverts the scale (lower values get higher scores)
         """
-        # Filter out None values
-        valid_values = [v for v in values if v is not None]
+        import math
+        
+        # Filter out None and NaN values
+        valid_values = [v for v in values if v is not None and not (isinstance(v, float) and math.isnan(v))]
         
         if len(valid_values) == 0:
             return [None] * len(values)
@@ -60,11 +71,11 @@ class StockScorer:
         
         # Avoid division by zero
         if max_val == min_val:
-            return [50.0 if v is not None else None for v in values]
+            return [50.0 if v is not None and not (isinstance(v, float) and math.isnan(v)) else None for v in values]
         
         normalized = []
         for v in values:
-            if v is None:
+            if v is None or (isinstance(v, float) and math.isnan(v)):
                 normalized.append(None)
             else:
                 # Scale to 0-100
@@ -83,21 +94,24 @@ class StockScorer:
         Normalize using z-scores (standard deviations from mean).
         Then scale to 0-100 range for consistency.
         """
-        valid_values = [v for v in values if v is not None]
+        import math
+        
+        # Filter out None and NaN values
+        valid_values = [v for v in values if v is not None and not (isinstance(v, float) and math.isnan(v))]
         
         if len(valid_values) < 2:
-            return [50.0 if v is not None else None for v in values]
+            return [50.0 if v is not None and not (isinstance(v, float) and math.isnan(v)) else None for v in values]
         
         mean = sum(valid_values) / len(valid_values)
         variance = sum((v - mean) ** 2 for v in valid_values) / len(valid_values)
         std_dev = variance ** 0.5
         
         if std_dev == 0:
-            return [50.0 if v is not None else None for v in values]
+            return [50.0 if v is not None and not (isinstance(v, float) and math.isnan(v)) else None for v in values]
         
         normalized = []
         for v in values:
-            if v is None:
+            if v is None or (isinstance(v, float) and math.isnan(v)):
                 normalized.append(None)
             else:
                 # Calculate z-score
@@ -127,11 +141,16 @@ class StockScorer:
         Returns:
             Dict of {ticker: total_score} (0-100 scale)
         """
+        import math
+        
         if not stocks_data:
             return {}
         
         tickers = list(stocks_data.keys())
         scores = {ticker: 0.0 for ticker in tickers}
+        
+        # Track actual weights used per stock (for N/A metric redistribution)
+        actual_weights = {ticker: 0.0 for ticker in tickers}
         
         # For each metric in weights, normalize and apply weight
         for metric_key, weight in self.weights.items():
@@ -141,12 +160,14 @@ class StockScorer:
             # Extract values for this metric across all stocks
             values = [stocks_data[ticker].get(metric_key) for ticker in tickers]
             
-            # Fill missing values with median if requested
+            # Separate NaN (N/A - Case 1) from None (Missing - Case 2)
+            # For median calculation, exclude both NaN and None
             if fill_missing_with_median:
-                valid_values = [v for v in values if v is not None]
+                valid_values = [v for v in values if v is not None and not (isinstance(v, float) and math.isnan(v))]
                 if valid_values:
                     median = sorted(valid_values)[len(valid_values) // 2]
-                    values = [v if v is not None else median for v in values]
+                    # Only impute None values (Case 2), leave NaN as-is (Case 1)
+                    values = [v if v is not None and not (isinstance(v, float) and math.isnan(v)) else (median if v is None else v) for v in values]
             
             # Determine direction
             higher_better = self.higher_is_better.get(metric_key, True)
@@ -162,12 +183,27 @@ class StockScorer:
                 # Skip if this stock's score is already None (failed earlier metric)
                 if scores[ticker] is None:
                     continue
+                
+                # Check if this metric is N/A (NaN) for this stock
+                value = values[i]
+                if isinstance(value, float) and math.isnan(value):
+                    # Case 1: N/A - skip this metric, don't add its weight
+                    continue
                     
                 if normalized[i] is not None:
                     scores[ticker] += normalized[i] * weight
+                    actual_weights[ticker] += weight
                 else:
-                    # If metric is missing, set score to None (incomplete data)
+                    # If metric is missing after imputation, set score to None (incomplete data)
                     scores[ticker] = None
+        
+        # Redistribute N/A metric weights proportionally
+        # Since normalized scores are 0-100 and we multiply by weight (0-1),
+        # we need to normalize by actual_weights to maintain 0-100 scale
+        for ticker in tickers:
+            if scores[ticker] is not None and actual_weights[ticker] > 0:
+                # Redistribute: scale up the score proportionally to account for skipped metrics
+                scores[ticker] = scores[ticker] / actual_weights[ticker]
         
         return scores
     
