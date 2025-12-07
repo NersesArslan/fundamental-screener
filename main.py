@@ -6,14 +6,13 @@ ARCHITECTURE:
 - Industry-specific overrides add specialized metrics
 - Industry-aware scoring system
 
-CORE UNIVERSAL METRICS (7):
+CORE UNIVERSAL METRICS (6):
 1. EV/FCF - Valuation relative to cash generation
-2. ROIC - Returns on invested capital (not distorted by buybacks)
-3. Revenue CAGR - Growth trajectory
-4. Operating Margin - Operational efficiency
-5. FCF Margin - Cash generation efficiency
-6. Net Debt/EBITDA - Leverage (handles negative book equity)
-7. Interest Coverage - Debt servicing ability
+2. Revenue CAGR - Growth trajectory
+3. Operating Margin - Operational efficiency
+4. FCF Margin - Cash generation efficiency
+5. Net Debt/EBITDA - Leverage (handles negative book equity)
+6. Interest Coverage - Debt servicing ability
 
 INDUSTRY SUPPORT:
 - 'semis': Adds CapEx Intensity, Inventory Turnover, Gross Margin
@@ -40,16 +39,14 @@ from stock_scorer import StockScorer
 
 SEMIS_SCORING_WEIGHTS = {
     # Core metrics (adjusted for semiconductor industry)
-    'ev_to_fcf': 0.15,           # Lower is better - valuation
-    'roic': 0.20,                # Higher is better - capital efficiency (critical for semis)
-    'revenue_cagr': 0.15,        # Higher is better - growth
-    'operating_margin': 0.15,    # Higher is better - operational efficiency
-    'fcf_margin': 0.15,          # Higher is better - cash generation
-    'net_debt_to_ebitda': 0.10,  # Lower is better - leverage
-    'interest_coverage': 0.10,   # Higher is better - debt safety
-    
+    'ev_to_fcf': 0.18,           # Lower is better - valuation
+    'revenue_cagr': 0.18,        # Higher is better - growth
+    'operating_margin': 0.18,    # Higher is better - operational efficiency
+    'fcf_margin': 0.18,          # Higher is better - cash generation
+    'net_debt_to_ebitda': 0.14,  # Lower is better - leverage
+    'interest_coverage': 0.14,   # Higher is better - debt safety
 }
-# Sum = 1.00 ✓
+# Sum = 1.00 ✓ (redistributed ROIC's 0.20 weight proportionally)
 
 # Note: Adjust core weights proportionally when adding industry metrics
 
@@ -63,7 +60,7 @@ if __name__ == "__main__":
     # WATCHLISTS - Organize by industry
     # ========================================================================
     semis = ['NVDA', 'AMD', 'INTC', 'TSM', 'ASML', 'QCOM', 'AVGO', 'MU', 'LRCX', 'KLAC']
-    big_tech = ['MSFT', 'GOOGL', 'AAPL', 'AMZN', 'META', 'ORCL', 'CRM', 'ADBE', 'IBM']
+    big_tech = ['MSFT', 'GOOGL', 'AAPL', 'AMZN', 'META', 'ORCL', 'CRM', 'ADBE', 'IBM', 'PLTR']
     
     # Data provider
     provider = YFinanceProvider()

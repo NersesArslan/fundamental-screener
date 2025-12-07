@@ -1,18 +1,17 @@
 """
 Core Universal Metrics - Work across all industries
 
-These 7 metrics are carefully chosen to be universally applicable:
+These 6 metrics are carefully chosen to be universally applicable:
 1. EV/FCF - Enterprise Value / Free Cash Flow
-2. ROIC - Return on Invested Capital (bypasses buyback distortions)
-3. Revenue CAGR - 3-5 year growth rate
-4. Operating Margin - Operating efficiency
-5. FCF Margin - Cash generation efficiency
-6. Net Debt/EBITDA - Leverage (handles negative book equity better)
-7. Interest Coverage - Debt servicing ability
+2. Revenue CAGR - 3-5 year growth trajectory
+3. Operating Margin - Operating efficiency
+4. FCF Margin - Cash generation efficiency
+5. Net Debt/EBITDA - Leverage (handles negative book equity better)
+6. Interest Coverage - Debt servicing ability
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, List
+from typing import Optional, List, Dict
 from stock_providers import StockDataProvider
 
 
@@ -34,6 +33,9 @@ class Metric(ABC):
         """Return the key used in results dict."""
         pass
 
+    def is_not_applicable(self, value, ticker_data: Dict) -> bool:
+        """Default: metric is always applicable unless overridden."""
+        return False
 
 # ============================================================================
 # CORE UNIVERSAL METRICS (7 metrics)
@@ -71,6 +73,10 @@ class ROICMetric(Metric):
     Return on Invested Capital = NOPAT / Invested Capital
     Superior to ROE because it's not distorted by buybacks.
     Formula: (Operating Income * (1 - Tax Rate)) / (Total Debt + Total Equity - Cash)
+    
+    Special handling:
+    - Returns None if data is missing (will be imputed with peer median)
+    - Returns float('nan') if invested capital <= 0 (metric not applicable, excluded from scoring)
     """
     
     def calculate(self, ticker: str, provider: StockDataProvider) -> Optional[float]:
@@ -81,24 +87,33 @@ class ROICMetric(Metric):
         total_debt = data.get('total_debt')
         total_equity = data.get('total_equity')
         cash = data.get('cash')
-        
-        if all(x is not None for x in [operating_income, tax_rate, total_debt, total_equity, cash]):
-            # NOPAT = Operating Income * (1 - Tax Rate)
-            nopat = operating_income * (1 - tax_rate)
-            
-            # Invested Capital = Total Debt + Total Equity - Cash
-            invested_capital = total_debt + total_equity - cash
-            
-            if invested_capital > 0:
-                return (nopat / invested_capital) * 100  # Return as percentage
-        
-        return None
+
+        if not all(x is not None for x in [operating_income, tax_rate, total_debt, total_equity, cash]):
+            return None
+
+        nopat = operating_income * (1 - tax_rate)
+        invested_capital = total_debt + total_equity - cash
+
+        # Store helper values into the object
+        self.last_invested_capital = invested_capital
+
+        if invested_capital > 0:
+            return (nopat / invested_capital) * 100
+        else:
+            # negative invested capital → NA, not “missing”
+            return float('nan')
+
     
     def get_name(self) -> str:
         return "ROIC"
     
     def get_key(self) -> str:
         return "roic"
+    
+
+    def is_not_applicable(self, value, ticker_data):
+        invested = ticker_data.get("invested_capital")
+        return invested is not None and invested <= 0
 
 
 class RevenueCagrMetric(Metric):
@@ -198,8 +213,14 @@ class InterestCoverageMetric(Metric):
     Higher is better (more cushion to pay interest).
     
     Returns None if interest expense data is missing/invalid (NaN, None, or near-zero).
-    The scorer will impute using peer group median.
+    The scorer will impute using peer group median (Category 2: Missing Data).
     """
+    
+    def is_not_applicable(self, value, ticker_data):
+        interest_expense = ticker_data.get("interest_expense")
+        if interest_expense in (None, 0):
+            return True
+        return False
     
     def calculate(self, ticker: str, provider: StockDataProvider) -> Optional[float]:
         import math
@@ -230,12 +251,11 @@ class InterestCoverageMetric(Metric):
 
 def get_core_metrics() -> List[Metric]:
     """
-    Returns all 7 core universal metrics.
+    Returns all 6 core universal metrics.
     Use this as the foundation for any industry screening.
     """
     return [
         EVToFCFMetric(),
-        ROICMetric(),
         RevenueCagrMetric(),
         OperatingMarginMetric(),
         FCFMarginMetric(),
