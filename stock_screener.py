@@ -74,7 +74,7 @@ class StockScreener:
         
         return results
     
-    def screen_multiple(self, tickers: List[str], verbose: bool = True, parallel: bool = True, max_workers: int = 5) -> Dict[str, Dict]:
+    def screen_multiple(self, tickers: List[str], verbose: bool = True, parallel: bool = True, max_workers: int = 6) -> Dict[str, Dict]:
         """
         Screen a list of tickers. Returns {ticker: metrics_dict}.
         
