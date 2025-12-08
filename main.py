@@ -27,7 +27,9 @@ from stock_providers import YFinanceProvider
 from stock_screener import StockScreener
 from screener_output import format_screener_output
 from stock_scorer import StockScorer
-
+from industries import ALL_SEMIS, FABLESS, FOUNDRIES, EQUIPMENT
+import os
+import sys
 
 # ============================================================================
 # SCORING WEIGHTS - Tailored per industry
@@ -69,15 +71,28 @@ if __name__ == "__main__":
     # INDUSTRY-AWARE SCREENING
     # ========================================================================
     
+    # Choose which sub-industry to screen
+    WATCHLIST = FABLESS  # Change to: FABLESS, FOUNDRIES, EQUIPMENT, or ALL_SEMIS
+    INDUSTRY_NAME = "FABLESS DESIGNERS"  # Update this too
+    
     # Screen semiconductors with industry-specific metrics
     print("\n" + "="*70)
-    print("SEMICONDUCTOR SCREENING (Core + Semis Metrics)")
+    print(f"SEMICONDUCTOR SCREENING - {INDUSTRY_NAME}")
     print("="*70)
     
-    screener = StockScreener(provider, industry='None')
+    screener = StockScreener(provider, industry='semis')
     
-    print("\nFetching stock data...")
-    stocks_data = screener.screen_multiple(big_tech, verbose=True)
+    # Check if cached results exist (for fast testing)
+    USE_CACHE = os.path.exists('cached_screening_results.json')
+    
+    if USE_CACHE:
+        print("\n📦 Using cached results (fast mode)")
+        print("💡 Delete cached_screening_results.json to fetch fresh data\n")
+        from cache_results import load_cached_results
+        stocks_data = load_cached_results()
+    else:
+        print(f"\nFetching stock data for {len(WATCHLIST)} {INDUSTRY_NAME} stocks...")
+        stocks_data = screener.screen_multiple(WATCHLIST, verbose=True)
     
     # Display raw fundamentals
     metric_names = screener.get_metric_names()
