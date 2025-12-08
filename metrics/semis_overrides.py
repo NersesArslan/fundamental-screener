@@ -148,7 +148,7 @@ def get_semis_metrics() -> List[Metric]:
     Use with core metrics: get_core_metrics() + get_semis_metrics()
     """
     return [
-        ROICMetric,
+        ROICMetric(),
         CapExIntensityMetric(),
         InventoryTurnoverMetric(),
         GrossMarginMetric(),
