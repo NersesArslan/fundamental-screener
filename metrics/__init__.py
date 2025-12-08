@@ -19,7 +19,6 @@ Usage:
 from metrics.core import (
     get_core_metrics,
     EVToFCFMetric,
-    ROICMetric,
     RevenueCagrMetric,
     OperatingMarginMetric,
     FCFMarginMetric,
@@ -30,7 +29,6 @@ from metrics.core import (
 __all__ = [
     'get_core_metrics',
     'EVToFCFMetric',
-    'ROICMetric',
     'RevenueCagrMetric',
     'OperatingMarginMetric',
     'FCFMarginMetric',

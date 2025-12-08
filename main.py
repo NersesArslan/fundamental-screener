@@ -23,11 +23,11 @@ USAGE:
     screener = StockScreener(provider, industry='semis')
     screener = StockScreener(provider, industry='tech')
 """
-from stock_providers import YFinanceProvider
-from stock_screener import StockScreener
-from screener_output import format_screener_output
-from stock_scorer import StockScorer
-from industries import ALL_SEMIS, FABLESS, FOUNDRIES, EQUIPMENT
+from core.stock_providers import YFinanceProvider
+from core.stock_screener import StockScreener
+from core.screener_output import format_screener_output
+from core.stock_scorer import StockScorer
+from data.industries import ALL_SEMIS, FABLESS, FOUNDRIES, EQUIPMENT
 import os
 import sys
 
@@ -83,12 +83,12 @@ if __name__ == "__main__":
     screener = StockScreener(provider, industry='semis')
     
     # Check if cached results exist (for fast testing)
-    USE_CACHE = os.path.exists('cached_screening_results.json')
+    USE_CACHE = os.path.exists('utils/cached_screening_results.json')
     
     if USE_CACHE:
         print("\n📦 Using cached results (fast mode)")
-        print("💡 Delete cached_screening_results.json to fetch fresh data\n")
-        from cache_results import load_cached_results
+        print("💡 Delete utils/cached_screening_results.json to fetch fresh data\n")
+        from utils.cache_results import load_cached_results
         stocks_data = load_cached_results()
     else:
         print(f"\nFetching stock data for {len(WATCHLIST)} {INDUSTRY_NAME} stocks...")

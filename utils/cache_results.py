@@ -3,19 +3,25 @@ Cache stock screening results to avoid repeated API calls during testing.
 
 Usage:
     # Save results once
-    python cache_results.py --save
+    python -m utils.cache_results --save
 
     # Load cached results in main.py
-    from cache_results import load_cached_results
+    from utils.cache_results import load_cached_results
     stocks_data = load_cached_results()
 """
 
 import json
 import argparse
-from stock_providers import YFinanceProvider
-from stock_screener import StockScreener
+import sys
+import os
 
-CACHE_FILE = "cached_screening_results.json"
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from core.stock_providers import YFinanceProvider
+from core.stock_screener import StockScreener
+
+CACHE_FILE = os.path.join(os.path.dirname(__file__), "cached_screening_results.json")
 
 def save_results(tickers, industry='semis'):
     """Fetch and save screening results."""

@@ -1,7 +1,7 @@
 from typing import Optional, Dict, List
 import pandas as pd
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from stock_providers import StockDataProvider
+from core.stock_providers import StockDataProvider
 from metrics.core import Metric, get_core_metrics
 
 # ============================================================================

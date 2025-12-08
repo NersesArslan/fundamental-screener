@@ -3,8 +3,14 @@ Test stock screener configuration WITHOUT making API calls.
 Quickly verify which metrics are loaded for each industry.
 """
 
-from stock_providers import YFinanceProvider
-from stock_screener import StockScreener
+import sys
+import os
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from core.stock_providers import YFinanceProvider
+from core.stock_screener import StockScreener
 
 def test_metrics(industry=None):
     """Display which metrics are loaded for a given industry."""

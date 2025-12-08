@@ -8,7 +8,7 @@ These metrics are particularly important for evaluating semiconductor companies:
 
 from typing import List, Optional
 from metrics.core import Metric
-from stock_providers import StockDataProvider
+from core.stock_providers import StockDataProvider
 
 class ROICMetric(Metric):
     """
