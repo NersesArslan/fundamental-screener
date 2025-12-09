@@ -1,16 +1,4 @@
 {
-  "AVGO": {
-    "ev_to_fcf": 7.612019544003209,
-    "revenue_cagr": 23.388683592809144,
-    "operating_margin": 29.076666537402566,
-    "fcf_margin": 48.33831000116338,
-    "net_debt_to_ebitda": 0.8963536957124589,
-    "interest_coverage": 3.5084745762711864,
-    "roic": 9.61340533741342,
-    "capex_intensity": 1.0625508977391709,
-    "inventory_turnover": 10.832386363636363,
-    "gross_margin": 63.03369915073487
-  },
   "NVDA": {
     "ev_to_fcf": 56.680679805079926,
     "revenue_cagr": 69.23439347204794,
@@ -22,18 +10,6 @@
     "capex_intensity": 2.479750492348483,
     "inventory_turnover": 3.237996031746032,
     "gross_margin": 74.98869705816992
-  },
-  "MRVL": {
-    "ev_to_fcf": 54.50476989536432,
-    "revenue_cagr": 8.924659620819963,
-    "operating_margin": -6.35305949057618,
-    "fcf_margin": 27.342083817384218,
-    "net_debt_to_ebitda": 0.8426255103688207,
-    "interest_coverage": -3.723864836325238,
-    "roic": -2.3397522780860736,
-    "capex_intensity": 5.056092105491304,
-    "inventory_turnover": 3.2874623676799066,
-    "gross_margin": 41.30529017044371
   },
   "AMD": {
     "ev_to_fcf": 64.5174793773862,
@@ -59,6 +35,42 @@
     "inventory_turnover": 3.0245173153539686,
     "gross_margin": 55.428597236022036
   },
+  "TSM": {
+    "ev_to_fcf": 215.79351748772518,
+    "revenue_cagr": 22.16071696297579,
+    "operating_margin": 45.67596942094305,
+    "fcf_margin": 0.9539568898894198,
+    "net_debt_to_ebitda": -0.6930167880088184,
+    "interest_coverage": "NaN",
+    "roic": 43.154562413934606,
+    "capex_intensity": 33.34067072412515,
+    "inventory_turnover": 4.411572563612312,
+    "gross_margin": 56.1223535424378
+  },
+  "UMC": {
+    "ev_to_fcf": 50.58205806730895,
+    "revenue_cagr": 2.9313798474240205,
+    "operating_margin": 22.06976698976366,
+    "fcf_margin": 0.6113531463128279,
+    "net_debt_to_ebitda": -0.2956420967942609,
+    "interest_coverage": 34.981504757842664,
+    "roic": 13.00388690396951,
+    "capex_intensity": 39.32070553291822,
+    "inventory_turnover": 4.377800925056475,
+    "gross_margin": 32.5670419576564
+  },
+  "AVGO": {
+    "ev_to_fcf": 7.612019544003209,
+    "revenue_cagr": 23.388683592809144,
+    "operating_margin": 29.076666537402566,
+    "fcf_margin": 48.33831000116338,
+    "net_debt_to_ebitda": 0.8963536957124589,
+    "interest_coverage": 3.5084745762711864,
+    "roic": 9.61340533741342,
+    "capex_intensity": 1.0625508977391709,
+    "inventory_turnover": 10.832386363636363,
+    "gross_margin": 63.03369915073487
+  },
   "MPWR": {
     "ev_to_fcf": 63.897292206710944,
     "revenue_cagr": 22.25200590091174,
@@ -70,5 +82,161 @@
     "capex_intensity": 6.620361560418648,
     "inventory_turnover": 2.350343532462209,
     "gross_margin": 55.315572470662865
+  },
+  "MRVL": {
+    "ev_to_fcf": 54.50476989536432,
+    "revenue_cagr": 8.924659620819963,
+    "operating_margin": -6.35305949057618,
+    "fcf_margin": 27.342083817384218,
+    "net_debt_to_ebitda": 0.8426255103688207,
+    "interest_coverage": -3.723864836325238,
+    "roic": -2.3397522780860736,
+    "capex_intensity": 5.056092105491304,
+    "inventory_turnover": 3.2874623676799066,
+    "gross_margin": 41.30529017044371
+  },
+  "MCHP": {
+    "ev_to_fcf": 54.006769883351005,
+    "revenue_cagr": -13.582023248250529,
+    "operating_margin": 8.53098873137041,
+    "fcf_margin": 17.139222101054163,
+    "net_debt_to_ebitda": 5.930224747937672,
+    "interest_coverage": 1.154733492442323,
+    "roic": -0.03938631723068136,
+    "capex_intensity": 2.8625954198473282,
+    "inventory_turnover": 1.4949362195593352,
+    "gross_margin": 56.06824790985097
+  },
+  "QRVO": {
+    "ev_to_fcf": 16.384963633982526,
+    "revenue_cagr": -7.146676224470316,
+    "operating_margin": 7.746658954856062,
+    "fcf_margin": 14.372524012690608,
+    "net_debt_to_ebitda": 0.6201954288370541,
+    "interest_coverage": 1.841321111224594,
+    "roic": 6.334631895352852,
+    "capex_intensity": 3.699948184591921,
+    "inventory_turnover": 3.4062546802456195,
+    "gross_margin": 41.29069573277124
+  },
+  "ASML": {
+    "ev_to_fcf": 43.447078627286515,
+    "revenue_cagr": 14.939298295129344,
+    "operating_margin": 31.923829472559433,
+    "fcf_margin": 34.480599624611585,
+    "net_debt_to_ebitda": -0.19933543890401617,
+    "interest_coverage": "NaN",
+    "roic": 45.758069150726286,
+    "capex_intensity": 7.370439693025133,
+    "inventory_turnover": 1.2643712987191846,
+    "gross_margin": 51.275700653506895
+  },
+  "LRCX": {
+    "ev_to_fcf": 35.51738759554439,
+    "revenue_cagr": 2.2853032228864922,
+    "operating_margin": 32.008564303688445,
+    "fcf_margin": 30.105018059903806,
+    "net_debt_to_ebitda": -0.32205082287411496,
+    "interest_coverage": 34.43450446962172,
+    "roic": 69.3472750722808,
+    "capex_intensity": 4.118045361279711,
+    "inventory_turnover": 2.19511414949567,
+    "gross_margin": 48.705023885591736
+  },
+  "KLAC": {
+    "ev_to_fcf": 41.568331011174564,
+    "revenue_cagr": 9.683221369667262,
+    "operating_margin": 41.248438446279344,
+    "fcf_margin": 31.856650149940418,
+    "net_debt_to_ebitda": 0.2496155970507117,
+    "interest_coverage": 16.370518191987188,
+    "roic": 71.9211826571843,
+    "capex_intensity": 2.798654706970835,
+    "inventory_turnover": 1.479342023050612,
+    "gross_margin": 60.90980853989936
+  },
+  "AMAT": {
+    "ev_to_fcf": 36.196805704276144,
+    "revenue_cagr": 5.621215079833286,
+    "operating_margin": null,
+    "fcf_margin": null,
+    "net_debt_to_ebitda": -0.2266143064012707,
+    "interest_coverage": null,
+    "roic": "NaN",
+    "capex_intensity": null,
+    "inventory_turnover": "NaN",
+    "gross_margin": null
+  },
+  "INTC": {
+    "ev_to_fcf": 100,
+    "revenue_cagr": -12.408689367543824,
+    "operating_margin": -8.86612304853016,
+    "fcf_margin": -15.852808798327715,
+    "net_debt_to_ebitda": 1.4964072680549778,
+    "interest_coverage": -9.841392649903288,
+    "roic": -1.1650329936590003,
+    "capex_intensity": 45.09142953993334,
+    "inventory_turnover": 2.931300213149697,
+    "gross_margin": 32.664168283083185
+  },
+  "TXN": {
+    "ev_to_fcf": 84.00001969230769,
+    "revenue_cagr": -5.173710926505426,
+    "operating_margin": 34.14743302857873,
+    "fcf_margin": 13.298382456364683,
+    "net_debt_to_ebitda": 1.1337172339657193,
+    "interest_coverage": 11.734251968503937,
+    "roic": 18.244896010550296,
+    "capex_intensity": 30.816443961383545,
+    "inventory_turnover": 1.4462116191738459,
+    "gross_margin": 58.14206252797136
+  },
+  "NXPI": {
+    "ev_to_fcf": 37.30632634576271,
+    "revenue_cagr": 4.469369189277939,
+    "operating_margin": 27.524972253052166,
+    "fcf_margin": 14.032027905501824,
+    "net_debt_to_ebitda": 2.0723223063063063,
+    "interest_coverage": 8.78643216080402,
+    "roic": 16.384579957184258,
+    "capex_intensity": 6.944664658316156,
+    "inventory_turnover": 2.3323429541595924,
+    "gross_margin": 56.43729189789123
+  },
+  "STM": {
+    "ev_to_fcf": 100,
+    "revenue_cagr": 1.309430206492923,
+    "operating_margin": 11.259326249152158,
+    "fcf_margin": -2.8788906473735776,
+    "net_debt_to_ebitda": -0.9840098142777253,
+    "interest_coverage": 23.094117647058823,
+    "roic": 8.272974948501561,
+    "capex_intensity": 23.973170547893584,
+    "inventory_turnover": 2.8808160343593414,
+    "gross_margin": 39.3398146054714
+  },
+  "MU": {
+    "ev_to_fcf": 162.65970371223023,
+    "revenue_cagr": 6.711908086251395,
+    "operating_margin": 26.24270961528172,
+    "fcf_margin": 4.4625180587511375,
+    "net_debt_to_ebitda": 0.27888336566659966,
+    "interest_coverage": 21.238993710691823,
+    "roic": 14.637651691033168,
+    "capex_intensity": 42.423350634062814,
+    "inventory_turnover": 2.693596648713345,
+    "gross_margin": 39.79078602386431
+  },
+  "WDC": {
+    "ev_to_fcf": null,
+    "revenue_cagr": -20.27961227847529,
+    "operating_margin": 22.373949579831933,
+    "fcf_margin": 20.3781512605042,
+    "net_debt_to_ebitda": null,
+    "interest_coverage": 4.165266106442577,
+    "roic": null,
+    "capex_intensity": 4.3277310924369745,
+    "inventory_turnover": 4.5143299767622,
+    "gross_margin": 38.78151260504202
   }
 }
