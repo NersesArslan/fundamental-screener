@@ -44,6 +44,11 @@ import sys
 
 if __name__ == "__main__":
     # ========================================================================
+    # CONFIGURATION
+    # ========================================================================
+    USE_CACHE = False  # Toggle: True = fast cached data, False = live API calls
+    
+    # ========================================================================
     # WATCHLISTS - Organize by industry
     # ========================================================================
     semis = ['NVDA', 'AMD', 'INTC', 'TSM', 'ASML', 'QCOM', 'AVGO', 'MU', 'LRCX', 'KLAC']
@@ -57,8 +62,8 @@ if __name__ == "__main__":
     # ========================================================================
     
     # Choose which sub-industry to screen
-    WATCHLIST = FABLESS  # Change to: FABLESS, FOUNDRIES, EQUIPMENT, or ALL_SEMIS
-    INDUSTRY_NAME = "FABLESS DESIGNERS"  # Update this too
+    WATCHLIST = ALL_SEMIS  # Change to: FABLESS, FOUNDRIES, EQUIPMENT, or ALL_SEMIS
+    INDUSTRY_NAME = "ALL Semiconductors"  # Update this too
     
     # Screen semiconductors with industry-specific metrics
     print("\n" + "="*70)
@@ -67,8 +72,9 @@ if __name__ == "__main__":
     
     screener = StockScreener(provider, industry='semis')
     
-    # Check if cached results exist (for fast testing)
-    USE_CACHE = os.path.exists('utils/cached_screening_results.json')
+    # Check if cached results exist and user wants to use them
+    cache_exists = os.path.exists('utils/cached_screening_results.json')
+    USE_CACHE = USE_CACHE and cache_exists
     
     if USE_CACHE:
         print("\n📦 Using cached results (fast mode)")
