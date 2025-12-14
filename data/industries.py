@@ -95,12 +95,105 @@ industry_categories = {
         "WDC", "STX",
     ],
     
-    # Big Tech (for comparison)
-    "big_tech": [
-        "MSFT", "GOOGL", "AAPL", "AMZN", "META", "ORCL", "CRM", 
-        "ADBE", "IBM", "NFLX", "PLTR"
-    ]
+    # ============================
+    # CLOUD INFRASTRUCTURE (IaaS)
+    # ============================
+    "cloud_infrastructure": [
+        "AMZN",   # AWS
+        "MSFT",   # Azure
+        "GOOGL",  # Google Cloud
+        "IBM",    # IBM Cloud
+        "ORCL",   # Oracle Cloud
+    ],
+
+    # ============================
+    # CLOUD SaaS (Enterprise SaaS)
+    # ============================
+    "enterprise_saas": [
+        "ADBE",   # Adobe
+        "INTU",   # Intuit
+        "WDAY",   # Workday
+        "NOW",    # ServiceNow
+        "TEAM",   # Atlassian
+        "HUBS",   # HubSpot
+        "CRM",    # Salesforce
+    ],
+
+    # ============================
+    # VERTICAL SaaS (Industry-specific)
+    # ============================
+    "vertical_saas": [
+        "SHOP",   # Shopify – e-commerce merchants
+        "TOST",   # Toast – restaurants
+        "VEEV",   # Veeva – life sciences
+        "ADSK",   # Autodesk – engineering/design
+    ],
+
+    # ============================
+    # AD PLATFORM / DIGITAL MEDIA
+    # ============================
+    "ad_platform": [
+        "META",   # Meta Ads + Instagram Ads
+        "GOOGL",  # Google Search + YouTube Ads
+        "PINS",   # Pinterest Ads
+        "SNAP",   # Snapchat Ads
+    ],
+
+    # ============================
+    # STREAMING / DIGITAL CONTENT
+    # ============================
+    "streaming": [
+        "NFLX",   # Netflix
+        "DIS",    # Disney+
+        "PARA",   # Paramount+
+        "WBD",    # Max / HBO
+        "SPOT",   # Spotify
+    ],
+
+    # ============================
+    # CONSUMER HARDWARE + ECOSYSTEMS
+    # ============================
+    "hardware_ecosystem": [
+        "AAPL",   # iPhone / Mac / Wearables
+        "SONY",   # PlayStation ecosystem
+        "GOOGL",  # Pixel / Android ecosystem
+        "META",   # VR hardware (Quest)
+    ],
+
+    # ============================
+    # ENTERPRISE AI / DATA ANALYTICS
+    # ============================
+    "enterprise_ai": [
+        "PLTR",   # Palantir
+        "SNOW",   # Snowflake AI Cloud
+        "DDOG",   # Datadog (Observability + AI)
+        "MDB",    # MongoDB (data platform)
+        "ZS",     # Zscaler AI Security
+    ],
+
+    # ============================
+    # CYBERSECURITY
+    # ============================
+    "cybersecurity": [
+        "CRWD",   # CrowdStrike
+        "PANW",   # Palo Alto Networks
+        "FTNT",   # Fortinet
+        "OKTA",   # Identity security
+        "S",      # SentinelOne
+    ],
+
+    # ============================
+    # LEGACY ENTERPRISE TECH
+    # ============================
+    "legacy_enterprise": [
+        "IBM",
+        "ORCL",
+        "CSCO",
+        "HPE",
+    ],
 }
+
+
 
 # Sub-industry mappings for easy access
 FOUNDRIES = industry_categories["foundries"]
@@ -109,4 +202,14 @@ EQUIPMENT = industry_categories["equipment"]
 IDMS = industry_categories["idms"]
 MEMORY = industry_categories["memory"]
 ALL_SEMIS = industry_categories["semiconductors"]
-BIG_TECH = industry_categories["big_tech"]
+
+# Big Tech Business Model Mappings
+CLOUD_INFRASTRUCTURE = industry_categories["cloud_infrastructure"]
+ENTERPRISE_SAAS = industry_categories["enterprise_saas"]
+VERTICAL_SAAS = industry_categories["vertical_saas"]
+AD_PLATFORM = industry_categories["ad_platform"]
+STREAMING = industry_categories["streaming"]
+HARDWARE_ECOSYSTEM = industry_categories["hardware_ecosystem"]
+ENTERPRISE_AI = industry_categories["enterprise_ai"]
+CYBERSECURITY = industry_categories["cybersecurity"]
+LEGACY_ENTERPRISE = industry_categories["legacy_enterprise"]
