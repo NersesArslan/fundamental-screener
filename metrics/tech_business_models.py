@@ -11,7 +11,7 @@ import math
 from metrics.core import Metric
 from stock_providers import StockDataProvider
 from semis_overrides import ROICMetric, CapExIntensityMetric, GrossMarginMetric
-
+import numpy as np
 
 class RnDIntensityMetric(Metric):
     """
@@ -229,6 +229,105 @@ class RevenuePerEmployeeMetric(Metric):
         return "revenue_per_employee"
 
 
+
+class ARPUGrowthMetric(Metric):
+
+    def __init__(self, years: int = 3):
+        self.years = years
+
+    def calculate(self, ticker: str, provider: StockDataProvider) -> Optional[float]:
+        # Get time series data for revenue and user counts
+        data = provider.get_user_metrics_data(ticker) or {}
+        
+        revenues = data.get("annual_revenues")  # List of annual revenues
+        users = data.get("annual_active_users")  # List of annual user counts
+
+        # Missing data → impute
+        if revenues is None or users is None:
+            return None
+
+        # Insufficient time series data
+        if len(revenues) < self.years + 1 or len(users) < self.years + 1:
+            return None
+
+        rev_start, rev_end = revenues[-(self.years + 1)], revenues[-1]
+        users_start, users_end = users[-(self.years + 1)], users[-1]
+
+        # Invalid → drop
+        if (
+            rev_start <= 0
+            or rev_end <= 0
+            or users_start <= 0
+            or users_end <= 0
+        ):
+            return None
+
+        # NaN handling
+        if any(
+            isinstance(x, float) and math.isnan(x)
+            for x in [rev_start, rev_end, users_start, users_end]
+        ):
+            return None
+
+        arpu_start = rev_start / users_start
+        arpu_end = rev_end / users_end
+
+        if arpu_start <= 0 or arpu_end <= 0:
+            return None
+
+        # Calculate CAGR and return as percentage
+        cagr = ((arpu_end / arpu_start) ** (1 / self.years) - 1) 
+        return cagr
+
+    def get_name(self) -> str:
+        return f"ARPU CAGR ({self.years}Y)"
+
+    def get_key(self) -> str:
+        return "arpu_cagr"
+
+
+class IncrementalMarginMetric(Metric):
+
+    def calculate(self, ticker: str, provider: StockDataProvider) -> Optional[float]:
+        # Get time series data for revenue and operating income
+        data = provider.get_incremental_margin_data(ticker) or {}
+        
+        revenue_current = data.get("revenue_current")
+        revenue_prior = data.get("revenue_prior")
+        op_income_current = data.get("operating_income_current")
+        op_income_prior = data.get("operating_income_prior")
+        
+        # Missing data → impute
+        if any(x is None for x in [revenue_current, revenue_prior, op_income_current, op_income_prior]):
+            return None
+        
+        # NaN handling
+        if any(
+            isinstance(x, float) and math.isnan(x)
+            for x in [revenue_current, revenue_prior, op_income_current, op_income_prior]
+        ):
+            return None
+        
+        # Calculate changes
+        revenue_change = revenue_current - revenue_prior
+        op_income_change = op_income_current - op_income_prior
+        
+        # Invalid → drop (need positive revenue growth to be meaningful)
+        if revenue_change <= 0:
+            return None
+        
+        # Calculate incremental margin
+        incremental_margin = (op_income_change / revenue_change) 
+        
+        return incremental_margin
+    
+    def get_name(self) -> str:
+        return "Incremental Margin"
+    
+    def get_key(self) -> str:
+        return "incremental_margin"
+
+
 # ============================================================================
 # PRESET CONFIGURATIONS
 # ============================================================================
@@ -241,7 +340,7 @@ def get_cloud_infrastructure_metrics() -> List[Metric]:
         CapExIntensityMetric(),
         RevenuePerCapexMetric(),
         GrossMarginMetric(),
-        OperatingMarginTrendMetric()
+        OperatingMarginTrendMetric(),
     ]
 
 def get_saas_metrics() -> List[Metric]:
@@ -255,4 +354,9 @@ def get_saas_metrics() -> List[Metric]:
 
 def get_ad_platform_metrics() -> List[Metric]:
     # User engagement, monetization efficiency
-    return [...]
+    return [
+        ARPUGrowthMetric(),
+        IncrementalMarginMetric(),
+        RnDIntensityMetric(),
+        CapExIntensityMetric()
+    ]
