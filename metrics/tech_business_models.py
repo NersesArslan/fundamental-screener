@@ -327,6 +327,114 @@ class IncrementalMarginMetric(Metric):
     def get_key(self) -> str:
         return "incremental_margin"
 
+class ContentSpendIntensityMetric(Metric):
+    def calculate(self, ticker: str, provider: StockDataProvider) -> float | None:
+        data = provider.get_content_spend_data(ticker) or {}
+
+        content_spend = data.get("content_spend")
+        revenue = data.get("revenue")
+
+        if content_spend is None or revenue is None:
+            return None
+        if revenue <= 0:
+            return None
+
+        return content_spend / revenue
+
+    def get_name(self) -> str:
+        return "Content Spend Intensity"
+
+    def get_key(self) -> str:
+        return "content_spend_intensity"
+
+class ServicesRevenueMixMetric(Metric):
+    def calculate(self, ticker: str, provider: StockDataProvider) -> float | None:
+        data = provider.get_segment_revenue_data(ticker) or {}
+
+        services_rev = data.get("services_revenue")
+        total_rev = data.get("total_revenue")
+
+        if services_rev is None or total_rev is None:
+            return None
+        if total_rev <= 0:
+            return None
+
+        return services_rev / total_rev
+
+    def get_name(self) -> str:
+        return "Services Revenue Mix"
+
+    def get_key(self) -> str:
+        return "services_revenue_mix"
+    
+class SalesMarketingIntensityMetric(Metric):
+    def calculate(self, ticker: str, provider: StockDataProvider) -> float | None:
+        data = provider.get_operating_expense_data(ticker) or {}
+
+        sales_marketing = data.get("sales_marketing_expense")
+        revenue = data.get("revenue")
+
+        if sales_marketing is None or revenue is None:
+            return None
+        if revenue <= 0:
+            return None
+
+        return sales_marketing / revenue
+
+    def get_name(self) -> str:
+        return "Sales & Marketing Intensity"
+
+    def get_key(self) -> str:
+        return "sales_marketing_intensity"
+    
+class FCFYieldMetric(Metric):
+    def calculate(self, ticker: str, provider: StockDataProvider) -> float | None:
+        data = provider.get_cashflow_and_valuation_data(ticker) or {}
+
+        fcf = data.get("free_cash_flow")
+        market_cap = data.get("market_cap")
+
+        if fcf is None or market_cap is None:
+            return None
+        if market_cap <= 0:
+            return None
+
+        return fcf / market_cap
+
+    def get_name(self) -> str:
+        return "FCF Yield"
+
+    def get_key(self) -> str:
+        return "fcf_yield"
+
+
+
+class RevenueVolatilityMetric(Metric):
+    def calculate(self, ticker: str, provider: StockDataProvider) -> float | None:
+        revenues = provider.get_annual_revenue_series(ticker)
+
+        if revenues is None or len(revenues) < 5:
+            return None
+
+        growth_rates = []
+        for i in range(1, len(revenues)):
+            if revenues[i - 1] <= 0:
+                return None
+            growth_rates.append(
+                (revenues[i] - revenues[i - 1]) / revenues[i - 1]
+            )
+
+        if len(growth_rates) < 3:
+            return None
+
+        return float(np.std(growth_rates))
+
+    def get_name(self) -> str:
+        return "Revenue Volatility"
+
+    def get_key(self) -> str:
+        return "revenue_volatility"
+
 
 # ============================================================================
 # PRESET CONFIGURATIONS
@@ -359,4 +467,49 @@ def get_ad_platform_metrics() -> List[Metric]:
         IncrementalMarginMetric(),
         RnDIntensityMetric(),
         CapExIntensityMetric()
+    ]
+
+def get_vertical_saas_metrics() -> List[Metric]:
+    # Industry-specific SaaS, deep domain expertise
+    return [
+     RuleOf40Metric,
+     RevenuePerEmployeeMetric(),
+     RnDIntensityMetric()
+    ]
+
+def get_streaming_metrics() -> List[Metric]:
+    # Content-heavy, subscriber-based
+    return [
+    ARPUGrowthMetric(),
+    ContentSpendIntensityMetric()
+    ]
+
+def get_hardware_ecosystem_metrics() -> List[Metric]:
+    # Physical products + services
+    return [
+    GrossMarginMetric(),
+    ServicesRevenueMixMetric(),
+    CapExIntensityMetric()
+    ]
+
+def get_enterprise_ai_metrics() -> List[Metric]:
+    # Data platforms, AI/ML infrastructure
+    return [
+    IncrementalMarginMetric(),
+    RnDIntensityMetric()
+    ]
+
+def get_cybersecurity_metrics() -> List[Metric]:
+    # Security platforms, high R&D
+    return [
+    GrossMarginMetric(),
+    SalesMarketingIntensityMetric()
+    ]
+
+def get_legacy_enterprise_metrics() -> List[Metric]:
+    # Mature tech, steady cash flow
+    return [
+    FCFYieldMetric(),
+    RevenueVolatilityMetric(),
+    CapExIntensityMetric()
     ]
