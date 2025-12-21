@@ -10,7 +10,7 @@ from typing import List, Optional
 import math
 from metrics.core import Metric
 from stock_providers import StockDataProvider
-from semis_overrides import ROICMetric, CapExIntensityMetric, GrossMarginMetric
+from semiconductors import ROICMetric, CapExIntensityMetric, GrossMarginMetric
 import numpy as np
 
 class RnDIntensityMetric(Metric):
