@@ -8,8 +8,8 @@ These metrics are particularly relevant for large technology companies:
 
 from typing import List, Optional
 import math
-from metrics.core import Metric
-from stock_providers import StockDataProvider
+from metrics.core_metrics import Metric
+from core.stock_providers import StockDataProvider
 from semiconductors import ROICMetric, CapExIntensityMetric, GrossMarginMetric
 import numpy as np
 
@@ -276,7 +276,7 @@ class ARPUGrowthMetric(Metric):
             return None
 
         # Calculate CAGR and return as percentage
-        cagr = ((arpu_end / arpu_start) ** (1 / self.years) - 1) 
+        cagr = ((arpu_end / arpu_start) ** (1 / self.years) - 1) * 100
         return cagr
 
     def get_name(self) -> str:

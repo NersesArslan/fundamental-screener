@@ -34,7 +34,7 @@ class IncrementalMarginMetric(Metric):
             return None
         
         # Calculate incremental margin
-        incremental_margin = (op_income_change / revenue_change) 
+        incremental_margin = (op_income_change / revenue_change) * 100
         
         return incremental_margin
     
