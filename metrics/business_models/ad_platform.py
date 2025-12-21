@@ -95,7 +95,7 @@ class RnDIntensityMetric(Metric):
         ):
             return None
         
-        return (rnd_expense / revenue) * 100
+        return (rnd_expense / revenue) 
     
     def get_name(self) -> str:
         return "R&D Intensity"
