@@ -27,8 +27,8 @@ from core.stock_providers import YFinanceProvider
 from core.stock_screener import StockScreener
 from core.screener_output import format_screener_output
 from core.stock_scorer import StockScorer
-from data.industries import ALL_SEMIS, FABLESS, FOUNDRIES, EQUIPMENT
-from data.score_weights import SUBSECTOR_MAP, MODIFIERS, apply_subsector_weights, Semiconductor_Weights
+from industry.ticker_groups import ALL_SEMIS, FABLESS, FOUNDRIES, EQUIPMENT
+from industry.score_weights import SUBSECTOR_MAP, MODIFIERS, apply_subsector_weights, Semiconductor_Weights
 import os
 import sys
 
@@ -48,11 +48,7 @@ if __name__ == "__main__":
     # ========================================================================
     USE_CACHE = False  # Toggle: True = fast cached data, False = live API calls
     
-    # ========================================================================
-    # WATCHLISTS - Organize by industry
-    # ========================================================================
-    semis = ['NVDA', 'AMD', 'INTC', 'TSM', 'ASML', 'QCOM', 'AVGO', 'MU', 'LRCX', 'KLAC']
-    big_tech = ['MSFT', 'GOOGL', 'AAPL', 'AMZN', 'META', 'ORCL', 'CRM', 'ADBE', 'IBM', 'PLTR']
+
     
     # Data provider
     provider = YFinanceProvider()
