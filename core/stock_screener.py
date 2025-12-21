@@ -2,7 +2,7 @@ from typing import Optional, Dict, List
 import pandas as pd
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from core.stock_providers import StockDataProvider
-from metrics.core import Metric, get_core_metrics
+from metrics.core_metrics import Metric, get_core_metrics
 
 # ============================================================================
 # BUSINESS LOGIC - Screen stocks with your criteria (Industry-Aware)
@@ -47,7 +47,7 @@ class StockScreener:
         core = get_core_metrics()
         
         if industry == 'semis' or industry == 'semiconductors':
-            from metrics.semis_overrides import get_semis_metrics
+            from metrics.semiconductors import get_semis_metrics
             return core + get_semis_metrics()
         elif industry == 'tech':
             from metrics.tech_overrides import get_tech_metrics
