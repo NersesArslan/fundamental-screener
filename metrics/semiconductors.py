@@ -18,7 +18,8 @@ class InventoryTurnoverMetric(Metric):
     """
     Inventory Turnover = Cost of Revenue / Average Inventory
     
-    Higher is better - shows how quickly inventory moves.
+    Higher is better - shows how quickl
+    y inventory moves.
     Important for semis: low turnover can signal demand weakness.
     """
     

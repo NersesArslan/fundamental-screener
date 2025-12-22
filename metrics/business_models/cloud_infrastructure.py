@@ -1,35 +1,45 @@
 from typing import Optional, List
-from metrics.semiconductors import (
+from metrics.shared_metrics import (
 ROICMetric, CapExIntensityMetric, GrossMarginMetric
 )
 from  metrics.core_metrics import Metric
 from core.stock_providers import StockDataProvider
-
+import math
 
 class RevenuePerCapexMetric(Metric):
     """
     Revenue / Capital Expenditures
-    
-    Measures capital efficiency - how much revenue generated per dollar of CapEx.
-    Higher is better. Particularly useful for distinguishing between:
-    - Cloud Infrastructure (low revenue/capex due to data centers)
-    - SaaS (high revenue/capex, capital-light)
+
+    Measures capital efficiency — how much revenue is generated per dollar of CapEx.
+    Unitless ratio (not a percentage).
     """
-    
+
     def calculate(self, ticker: str, provider: StockDataProvider) -> Optional[float]:
-        data = provider.get_capex_data(ticker)
-        
-        revenue = data.get('revenue')
-        capex = data.get('capex')
-        
-        if revenue is None or capex is None or capex <= 0:
-            return revenue / capex
-        
-        return None
-    
+        data = provider.get_capex_data(ticker) or {}
+
+        revenue = data.get("revenue")
+        capex = data.get("capex")
+
+        # Missing data → impute
+        if revenue is None or capex is None:
+            return None
+
+        # NaN handling
+        if (
+            isinstance(revenue, float) and math.isnan(revenue)
+            or isinstance(capex, float) and math.isnan(capex)
+        ):
+            return None
+
+        # Economic validity
+        if capex <= 0:
+            return None
+
+        return revenue / capex
+
     def get_name(self) -> str:
-        return "Revenue/CapEx"
-    
+        return "Revenue / CapEx"
+
     def get_key(self) -> str:
         return "revenue_per_capex"
 
