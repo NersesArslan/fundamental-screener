@@ -23,6 +23,7 @@ USAGE:
     screener = StockScreener(provider, industry='semis')
     screener = StockScreener(provider, industry='tech')
 """
+from experiments.run_business_model import run_business_model_test
 from core.stock_providers import YFinanceProvider
 from core.stock_screener import StockScreener
 from core.screener_output import format_screener_output
