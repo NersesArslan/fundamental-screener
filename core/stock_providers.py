@@ -59,6 +59,11 @@ class StockDataProvider(ABC):
     def get_rnd_data(self, ticker: str) -> Dict[str, Optional[float]]:
         """R&D expense and revenue for intensity calculations."""
         pass
+    
+    @abstractmethod
+    def get_margin_trend_data(self, ticker: str) -> Dict[str, Optional[float]]:
+        """Operating margin current and 3 years ago for trend analysis."""
+        pass
 
 
 class YFinanceProvider(StockDataProvider):
@@ -386,3 +391,39 @@ class YFinanceProvider(StockDataProvider):
             }
         except:
             return {'research_development': None, 'revenue': None}
+    
+    def get_margin_trend_data(self, ticker: str) -> Dict[str, Optional[float]]:
+        """Fetch operating margin for current year and 3 years ago."""
+        try:
+            stock = yf.Ticker(ticker)
+            income_stmt = stock.financials
+            
+            if income_stmt is None:
+                return {'operating_margin_current': None, 'operating_margin_3y_ago': None}
+            
+            # Need both Operating Income and Total Revenue
+            if 'Operating Income' not in income_stmt.index or 'Total Revenue' not in income_stmt.index:
+                return {'operating_margin_current': None, 'operating_margin_3y_ago': None}
+            
+            operating_income = income_stmt.loc['Operating Income']
+            revenue = income_stmt.loc['Total Revenue']
+            
+            # Calculate operating margin for each year
+            margins = []
+            for i in range(len(operating_income)):
+                if revenue.iloc[i] and revenue.iloc[i] > 0:
+                    margin = (operating_income.iloc[i] / revenue.iloc[i]) * 100
+                    margins.append(margin)
+                else:
+                    margins.append(None)
+            
+            # Current (most recent) and 3 years ago
+            current = margins[0] if len(margins) > 0 else None
+            three_years_ago = margins[3] if len(margins) > 3 else None
+            
+            return {
+                'operating_margin_current': current,
+                'operating_margin_3y_ago': three_years_ago,
+            }
+        except:
+            return {'operating_margin_current': None, 'operating_margin_3y_ago': None}
