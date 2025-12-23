@@ -1,8 +1,26 @@
 # experiments/run_business_model.py
+from universes.cloud_infrastructure import CLOUD_INFRASTRUCTURE
+from metrics.core_metrics import get_core_metrics
+from metrics.business_models.cloud_infrastructure import get_cloud_infrastructure_metrics
+from industry.business_model_weights.cloud_infrastructure import CLOUD_INFRASTRUCTURE_WEIGHT_MAP
+
+from core.stock_screener import StockScreener
+from core.stock_scorer import StockScorer
+from core.stock_providers import YFinanceProvider
+
+
 
 from core.stock_screener import StockScreener
 from core.stock_scorer import StockScorer
 from core.screener_output import format_screener_output
+
+
+def normalize_weights(weights: dict) -> dict:
+    total = sum(weights.values())
+    if total <= 0:
+        raise ValueError("Weights must sum to > 0")
+    return {k: v / total for k, v in weights.items()}
+
 
 def run_business_model_test(
     *,
@@ -34,8 +52,10 @@ def run_business_model_test(
     print("\nRaw Fundamentals:")
     print(df.to_string())
 
+    normalized_weights = normalize_weights(weight_map)
+
     # 4. Score
-    scorer = StockScorer(weight_map, normalization=normalization)
+    scorer = StockScorer(normalized_weights, normalization=normalization)
     scores = scorer.calculate_scores(stocks_data)
 
     # 5. Rank
@@ -57,3 +77,4 @@ def run_business_model_test(
         "scores": scores,
         "ranking": ranked,
     }
+
