@@ -12,6 +12,6 @@ CLOUD_INFRASTRUCTURE_WEIGHT_MAP = {
     "capex_intensity": 0.05,
     "revenue_per_capex": 0.08,
 
-    # "gross_margin": 0.05,
-    # "operating_margin_trend": 0.07,
+    "gross_margin": 0.05,
+    "operating_margin_trend": 0.07,
 }
