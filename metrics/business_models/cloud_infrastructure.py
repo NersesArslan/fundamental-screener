@@ -18,7 +18,7 @@ class RevenuePerCapexMetric(Metric):
         data = provider.get_capex_data(ticker) or {}
 
         revenue = data.get("revenue")
-        capex = data.get("capex")
+        capex = data.get("capital_expenditure")  # Match provider key name
 
         # Missing data → impute
         if revenue is None or capex is None:
@@ -31,11 +31,14 @@ class RevenuePerCapexMetric(Metric):
         ):
             return None
 
+        # CapEx is negative in cash flow statement, take absolute value
+        capex_abs = abs(capex)
+        
         # Economic validity
-        if capex <= 0:
+        if revenue <= 0 or capex_abs == 0:
             return None
 
-        return revenue / capex
+        return revenue / capex_abs
 
     def get_name(self) -> str:
         return "Revenue / CapEx"
