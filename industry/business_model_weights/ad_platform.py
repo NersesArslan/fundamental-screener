@@ -1,0 +1,21 @@
+ad_platform_weights = {
+    # --- Valuation & Shareholder Yield ---
+    "ev_fcf": 0.22,
+
+    # --- Profitability & Operating Leverage ---
+    "operating_margin": 0.16,
+    "fcf_margin": 0.16,
+    "incremental_margin": 0.14,
+
+    # --- Growth (De-emphasized, quality-checked) ---
+    "revenue_cagr": 0.08,
+    "arpu_growth": 0.08,
+
+    # --- Capital Discipline & Moat Maintenance ---
+    "capex_intensity": 0.07,
+    "rnd_intensity": 0.07,
+
+    # --- Balance Sheet Safety ---
+    "net_debt_ebitda": 0.01,
+    "interest_coverage": 0.01,
+}
