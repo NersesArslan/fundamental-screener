@@ -1,9 +1,9 @@
 from typing import Optional, List
 from metrics.shared_metrics import CapExIntensityMetric
-from  metrics.core_metrics import Metric
+from metrics.core_metrics import Metric
 from core.stock_providers import StockDataProvider
-from shared_business_models.incremental_margin import IncrementalMarginMetric
-from shared_business_models.arpu_growth import ARPUGrowthMetric
+from metrics.shared_business_models.incremental_margin import IncrementalMarginMetric
+from metrics.shared_business_models.arpu_growth import ARPUGrowthMetric
 import math 
 
 

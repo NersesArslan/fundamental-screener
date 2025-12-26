@@ -162,12 +162,15 @@ class StockScorer:
             
             # Separate NaN (N/A - Case 1) from None (Missing - Case 2)
             # For median calculation, exclude both NaN and None
-            if fill_missing_with_median:
-                valid_values = [v for v in values if v is not None and not (isinstance(v, float) and math.isnan(v))]
-                if valid_values:
-                    median = sorted(valid_values)[len(valid_values) // 2]
-                    # Only impute None values (Case 2), leave NaN as-is (Case 1)
-                    values = [v if v is not None and not (isinstance(v, float) and math.isnan(v)) else (median if v is None else v) for v in values]
+            valid_values = [v for v in values if v is not None and not (isinstance(v, float) and math.isnan(v))]
+            # If the metric has no valid values across the peer group, skip it entirely
+            if len(valid_values) == 0:
+                continue
+
+            if fill_missing_with_median and valid_values:
+                median = sorted(valid_values)[len(valid_values) // 2]
+                # Only impute None values (Case 2), leave NaN as-is (Case 1)
+                values = [v if v is not None and not (isinstance(v, float) and math.isnan(v)) else (median if v is None else v) for v in values]
             
             # Determine direction
             higher_better = self.higher_is_better.get(metric_key, True)

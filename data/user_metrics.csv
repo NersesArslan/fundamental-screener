@@ -1,0 +1,13 @@
+ticker,year,revenue,active_users,user_metric_type,source_url,notes
+META,2024,150000000000,3200000000,DAP,https://investor.fb.com/financials/,Family DAP Q4 2024 estimate
+META,2023,134902000000,3190000000,DAP,https://investor.fb.com/financials/,Family DAP Q4 2023
+META,2022,116609000000,2960000000,DAP,https://investor.fb.com/financials/,Family DAP Q4 2022
+META,2021,117929000000,2820000000,DAP,https://investor.fb.com/financials/,Family DAP Q4 2021
+SNAP,2024,5400000000,443000000,DAU,https://investor.snap.com/financials/,DAU Q4 2024 estimate
+SNAP,2023,4602813000,414000000,DAU,https://investor.snap.com/financials/,DAU Q4 2023
+SNAP,2022,4606000000,375000000,DAU,https://investor.snap.com/financials/,DAU Q4 2022
+SNAP,2021,4117000000,319000000,DAU,https://investor.snap.com/financials/,DAU Q4 2021
+PINS,2024,3600000000,537000000,MAU,https://investor.pinterestinc.com/financials/,MAU Q4 2024 estimate
+PINS,2023,3055365000,498000000,MAU,https://investor.pinterestinc.com/financials/,MAU Q4 2023
+PINS,2022,2803529000,445000000,MAU,https://investor.pinterestinc.com/financials/,MAU Q4 2022
+PINS,2021,2578137000,431000000,MAU,https://investor.pinterestinc.com/financials/,MAU Q4 2021

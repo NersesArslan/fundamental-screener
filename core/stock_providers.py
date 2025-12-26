@@ -59,6 +59,16 @@ class StockDataProvider(ABC):
     def get_rnd_data(self, ticker: str) -> Dict[str, Optional[float]]:
         """R&D expense and revenue for intensity calculations."""
         pass
+
+    @abstractmethod
+    def get_user_metrics_data(self, ticker: str) -> Dict[str, Optional[list]]:
+        """User-related time series (annual revenues, active users) for ARPU calculations."""
+        pass
+
+    @abstractmethod
+    def get_incremental_margin_data(self, ticker: str) -> Dict[str, Optional[float]]:
+        """Provide revenue and operating income current/prior for incremental margin calculation."""
+        pass
     
     @abstractmethod
     def get_margin_trend_data(self, ticker: str) -> Dict[str, Optional[float]]:
@@ -391,6 +401,96 @@ class YFinanceProvider(StockDataProvider):
             }
         except:
             return {'research_development': None, 'revenue': None}
+
+    def get_user_metrics_data(self, ticker: str) -> Dict[str, Optional[list]]:
+        """Fetch annual revenues and active user counts.
+        
+        First tries to load from data/user_metrics.csv (curated data).
+        Falls back to yfinance for revenues if CSV unavailable.
+        Active user counts are not available via yfinance.
+        """
+        import csv
+        import os
+        
+        # Try loading from CSV first
+        csv_path = 'data/user_metrics.csv'
+        if os.path.exists(csv_path):
+            try:
+                with open(csv_path, 'r') as f:
+                    reader = csv.DictReader(f)
+                    ticker_data = [row for row in reader if row['ticker'] == ticker]
+                
+                if ticker_data:
+                    # Sort by year descending (most recent first)
+                    ticker_data.sort(key=lambda x: int(x['year']), reverse=True)
+                    
+                    revenues = [float(row['revenue']) for row in ticker_data if row['revenue']]
+                    users = [int(row['active_users']) for row in ticker_data if row['active_users']]
+                    
+                    return {
+                        'annual_revenues': revenues if revenues else None,
+                        'annual_active_users': users if users else None
+                    }
+            except Exception as e:
+                # CSV load failed, fall through to yfinance
+                pass
+        
+        # Fallback: try yfinance for revenues (users will be None)
+        try:
+            stock = yf.Ticker(ticker)
+            income_stmt = stock.financials
+
+            if income_stmt is None or 'Total Revenue' not in income_stmt.index:
+                return {'annual_revenues': None, 'annual_active_users': None}
+
+            # Extract annual revenue series (most recent first)
+            revenues = income_stmt.loc['Total Revenue'].dropna().tolist()
+
+            return {'annual_revenues': revenues, 'annual_active_users': None}
+        except:
+            return {'annual_revenues': None, 'annual_active_users': None}
+
+    def get_incremental_margin_data(self, ticker: str) -> Dict[str, Optional[float]]:
+        """Return current and prior year revenue and operating income for incremental margin."""
+        try:
+            stock = yf.Ticker(ticker)
+            income_stmt = stock.financials
+
+            if income_stmt is None:
+                return {
+                    'revenue_current': None,
+                    'revenue_prior': None,
+                    'operating_income_current': None,
+                    'operating_income_prior': None,
+                }
+
+            revenue = None
+            operating_income = None
+            if 'Total Revenue' in income_stmt.index:
+                revenue = income_stmt.loc['Total Revenue']
+            if 'Operating Income' in income_stmt.index:
+                operating_income = income_stmt.loc['Operating Income']
+
+            # Safely pull most recent and prior year
+            rev_curr = revenue.iloc[0] if revenue is not None and len(revenue) > 0 else None
+            rev_prior = revenue.iloc[1] if revenue is not None and len(revenue) > 1 else None
+
+            op_curr = operating_income.iloc[0] if operating_income is not None and len(operating_income) > 0 else None
+            op_prior = operating_income.iloc[1] if operating_income is not None and len(operating_income) > 1 else None
+
+            return {
+                'revenue_current': rev_curr,
+                'revenue_prior': rev_prior,
+                'operating_income_current': op_curr,
+                'operating_income_prior': op_prior,
+            }
+        except:
+            return {
+                'revenue_current': None,
+                'revenue_prior': None,
+                'operating_income_current': None,
+                'operating_income_prior': None,
+            }
     
     def get_margin_trend_data(self, ticker: str) -> Dict[str, Optional[float]]:
         """Fetch operating margin for current year and 3 years ago."""
