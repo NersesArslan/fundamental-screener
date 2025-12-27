@@ -43,6 +43,10 @@ class StockScorer:
             # Industry-specific metrics (tech)
             'rnd_intensity': True,  # Higher is better - more innovation investment (context-dependent)
             'net_debt_to_fcf': False,  # Lower is better - less debt burden
+            
+            # Shared business model metrics
+            'revenue_per_employee': True,  # Higher is better - more efficient per person
+            'rule_of_40': True,  # Higher is better - growth + profitability
         }
         
         # Validate weights sum to ~1.0
