@@ -75,6 +75,11 @@ class StockDataProvider(ABC):
         """Operating margin current and 3 years ago for trend analysis."""
         pass
 
+    @abstractmethod
+    def get_annual_revenue_series(self, ticker: str) -> Optional[List[float]]:
+        """Annual revenue time series for volatility calculations."""
+        pass
+
 
 class YFinanceProvider(StockDataProvider):
     """Use yfinance for all stock data - free and reliable."""
@@ -527,3 +532,21 @@ class YFinanceProvider(StockDataProvider):
             }
         except:
             return {'operating_margin_current': None, 'operating_margin_3y_ago': None}
+
+    def get_annual_revenue_series(self, ticker: str) -> Optional[List[float]]:
+        """Fetch annual revenue time series for volatility calculations."""
+        try:
+            stock = yf.Ticker(ticker)
+            income_stmt = stock.financials
+            
+            if income_stmt is None or 'Total Revenue' not in income_stmt.index:
+                return None
+            
+            # Extract revenue series and reverse to chronological order (oldest → newest)
+            revenues = income_stmt.loc['Total Revenue'].dropna()
+            # yfinance returns most recent first, reverse it
+            revenue_list = revenues.tolist()[::-1]
+            
+            return revenue_list if revenue_list else None
+        except:
+            return None

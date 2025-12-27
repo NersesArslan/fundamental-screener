@@ -4,7 +4,8 @@ from metrics.core_metrics import Metric
 from core.stock_providers import StockDataProvider
 from metrics.shared_business_models.incremental_margin import IncrementalMarginMetric
 from metrics.shared_business_models.arpu_growth import ARPUGrowthMetric
-import math 
+import math
+import numpy as np 
 
 class RevenueVolatilityMetric(Metric):
     """
