@@ -6,6 +6,55 @@ from metrics.shared_business_models.incremental_margin import IncrementalMarginM
 from metrics.shared_business_models.arpu_growth import ARPUGrowthMetric
 import math 
 
+class RevenueVolatilityMetric(Metric):
+    """
+    Revenue volatility measured as the standard deviation
+    of year-over-year revenue growth rates.
+
+    Higher volatility = less durable demand aggregation.
+    """
+
+    MIN_OBSERVATIONS = 3  # minimum number of growth rates
+
+    def calculate(self, ticker: str, provider: StockDataProvider) -> Optional[float]:
+        """
+        Returns revenue growth volatility in percentage points.
+        """
+        revenues = provider.get_annual_revenue_series(ticker)
+
+        if not revenues or len(revenues) < self.MIN_OBSERVATIONS + 1:
+            return None
+
+        # Ensure chronological order (oldest → newest)
+        revenues = sorted(revenues)
+
+        growth_rates: List[float] = []
+
+        for prev, curr in zip(revenues[:-1], revenues[1:]):
+            if prev is None or curr is None:
+                continue
+            if prev <= 0:
+                continue  # invalid base
+
+            growth = (curr - prev) / prev * 100
+
+            if isinstance(growth, float) and math.isnan(growth):
+                continue
+
+            growth_rates.append(growth)
+
+        if len(growth_rates) < self.MIN_OBSERVATIONS:
+            return None
+
+        volatility = float(np.std(growth_rates, ddof=1))
+
+        return volatility
+
+    def get_name(self) -> str:
+        return "Revenue Volatility"
+
+    def get_key(self) -> str:
+        return "revenue_volatility"
 
 class RnDIntensityMetric(Metric):
     """
@@ -53,5 +102,6 @@ def get_ad_platform_metrics() -> List[Metric]:
         ARPUGrowthMetric(),
         IncrementalMarginMetric(),
         RnDIntensityMetric(),
-        CapExIntensityMetric()
+        CapExIntensityMetric(),
+        RevenueVolatilityMetric()
     ]

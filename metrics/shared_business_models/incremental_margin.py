@@ -5,6 +5,8 @@ import math
 
 class IncrementalMarginMetric(Metric):
 
+    MAX_EFFECTIVE_MARGIN = 60.0  # percent
+    
     def calculate(self, ticker: str, provider: StockDataProvider) -> Optional[float]:
         # Get time series data for revenue and operating income
         data = provider.get_incremental_margin_data(ticker) or {}
@@ -36,6 +38,8 @@ class IncrementalMarginMetric(Metric):
         # Calculate incremental margin
         incremental_margin = (op_income_change / revenue_change) * 100
         
+        # Cap economically meaningless extremes
+        incremental_margin = min(incremental_margin, self.MAX_EFFECTIVE_MARGIN)
         return incremental_margin
     
     def get_name(self) -> str:
