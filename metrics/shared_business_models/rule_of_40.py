@@ -11,17 +11,22 @@ class RuleOf40Metric(Metric):
     """
 
     def calculate(self, ticker: str, provider: StockDataProvider) -> Optional[float]:
-        # ---- Growth (assumed % per project invariant) ----
-        growth_data = provider.get_growth_data(ticker) or {}
-        cagr_pct = growth_data.get("revenue_cagr_3y")
-
-        if cagr_pct is None or (
-            isinstance(cagr_pct, float) and math.isnan(cagr_pct)
-        ):
+        # ---- Growth ----
+        # Calculate revenue CAGR using the same method as RevenueCagrMetric
+        from calculation_functions import calculate_revenue_cagr_from_quarterly
+        quarterly_revenue = provider.get_quarterly_revenue(ticker)
+        
+        if quarterly_revenue is None:
+            return None
+        
+        cagr_pct = calculate_revenue_cagr_from_quarterly(quarterly_revenue)
+        
+        if cagr_pct is None or (isinstance(cagr_pct, float) and math.isnan(cagr_pct)):
             return None
 
         # ---- Profitability ----
-        data = provider.get_profitability_data(ticker) or {}
+        # Use get_margin_data which provides both revenue and FCF
+        data = provider.get_margin_data(ticker)
         revenue = data.get("revenue")
         fcf = data.get("free_cashflow")
 
@@ -37,3 +42,9 @@ class RuleOf40Metric(Metric):
         fcf_margin_pct = (fcf / revenue) * 100
 
         return cagr_pct + fcf_margin_pct
+
+    def get_name(self) -> str:
+        return "Rule of 40"
+
+    def get_key(self) -> str:
+        return "rule_of_40"

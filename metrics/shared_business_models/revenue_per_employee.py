@@ -13,7 +13,7 @@ class RevenuePerEmployeeMetric(Metric):
     """
 
     def calculate(self, ticker: str, provider: StockDataProvider) -> Optional[float]:
-        data = provider.get_employee_data(ticker) or {}
+        data = provider.get_employee_data(ticker)
 
         revenue = data.get("revenue")
         employees = data.get("full_time_employees")
