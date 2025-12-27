@@ -83,6 +83,11 @@ class StockDataProvider(ABC):
     def get_operating_expense_data(self, ticker: str) -> Dict[str, Optional[float]]:
         """Sales & marketing expense and revenue for intensity calculations."""
         pass
+    
+    @abstractmethod
+    def get_employee_data(self, ticker: str) -> Dict[str, Optional[float]]:
+        """Full-time employee count and revenue for efficiency calculations."""
+        pass
 
 
 class YFinanceProvider(StockDataProvider):
@@ -575,3 +580,23 @@ class YFinanceProvider(StockDataProvider):
             }
         except:
             return {'sales_marketing_expense': None, 'revenue': None}
+    
+    def get_employee_data(self, ticker: str) -> Dict[str, Optional[float]]:
+        """Fetch employee count and revenue for revenue per employee calculations."""
+        try:
+            stock = yf.Ticker(ticker)
+            info = stock.info
+            income_stmt = stock.financials
+            
+            employees = info.get('fullTimeEmployees')
+            
+            revenue = None
+            if income_stmt is not None and 'Total Revenue' in income_stmt.index:
+                revenue = income_stmt.loc['Total Revenue'].iloc[0]
+            
+            return {
+                'full_time_employees': employees,
+                'revenue': revenue,
+            }
+        except:
+            return {'full_time_employees': None, 'revenue': None}
