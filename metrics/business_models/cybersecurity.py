@@ -1,7 +1,7 @@
 from typing import List
 from metrics.shared_metrics import GrossMarginMetric
 
-from  metrics.core_metrics import Metric
+from metrics.core_metrics import Metric
 from core.stock_providers import StockDataProvider
 
 class SalesMarketingIntensityMetric(Metric):

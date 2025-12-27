@@ -79,6 +79,10 @@ class StockDataProvider(ABC):
     def get_annual_revenue_series(self, ticker: str) -> Optional[List[float]]:
         """Annual revenue time series for volatility calculations."""
         pass
+    @abstractmethod
+    def get_operating_expense_data(self, ticker: str) -> Dict[str, Optional[float]]:
+        """Sales & marketing expense and revenue for intensity calculations."""
+        pass
 
 
 class YFinanceProvider(StockDataProvider):
@@ -550,3 +554,24 @@ class YFinanceProvider(StockDataProvider):
             return revenue_list if revenue_list else None
         except:
             return None
+        
+    def get_operating_expense_data(self, ticker: str) -> Dict[str, Optional[float]]:
+        """Fetch SG&A expense and revenue for sales & marketing intensity calculations."""
+        try:
+            stock = yf.Ticker(ticker)
+            income_stmt = stock.financials
+            
+            sga = None
+            if income_stmt is not None and 'Selling General And Administration' in income_stmt.index:
+                sga = income_stmt.loc['Selling General And Administration'].iloc[0]
+            
+            revenue = None
+            if income_stmt is not None and 'Total Revenue' in income_stmt.index:
+                revenue = income_stmt.loc['Total Revenue'].iloc[0]
+            
+            return {
+                'sales_marketing_expense': sga,  # Using SG&A as proxy
+                'revenue': revenue,
+            }
+        except:
+            return {'sales_marketing_expense': None, 'revenue': None}
