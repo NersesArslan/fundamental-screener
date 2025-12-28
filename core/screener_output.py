@@ -22,8 +22,11 @@ def format_screener_output(results: Dict[str, Dict], metric_names: Dict[str, str
         if col in ['ev_to_fcf', 'net_debt_to_ebitda', 'net_debt_to_fcf', 'interest_coverage', 'inventory_turnover']:
             df[col] = df[col].apply(lambda x: f"{x:.2f}" if pd.notna(x) else None)
         # Percentages
-        elif col in ['roic', 'revenue_cagr', 'operating_margin', 'fcf_margin', 'capex_intensity', 'rnd_intensity', 'gross_margin']:
+        elif col in ['roic', 'revenue_cagr', 'operating_margin', 'fcf_margin', 'capex_intensity', 'rnd_intensity', 'gross_margin', 'rule_of_40']:
             df[col] = df[col].apply(lambda x: f"{x:.2f}%" if pd.notna(x) else None)
+        # Currency (thousands)
+        elif col in ['revenue_per_employee']:
+            df[col] = df[col].apply(lambda x: f"${x:.1f}K" if pd.notna(x) else None)
         # Legacy format support
         elif col == 'price':
             df[col] = df[col].apply(lambda x: f"${x:.2f}" if pd.notna(x) else None)

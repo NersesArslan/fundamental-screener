@@ -30,3 +30,5 @@ Thumbs.db
 
 # Validation scripts (temporary/testing)
 validate_*.py
+
+*.json
