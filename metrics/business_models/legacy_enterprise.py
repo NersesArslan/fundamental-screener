@@ -4,6 +4,7 @@ from metrics.shared_metrics import CapExIntensityMetric
 from  metrics.core_metrics import Metric
 from core.stock_providers import StockDataProvider
 import math
+import numpy as np
 
 class FCFYieldMetric(Metric):
     """
@@ -15,9 +16,9 @@ class FCFYieldMetric(Metric):
     """
 
     def calculate(self, ticker: str, provider: StockDataProvider) -> Optional[float]:
-        data = provider.get_cashflow_and_valuation_data(ticker) or {}
+        data = provider.get_valuation_data(ticker) or {}
 
-        fcf = data.get("free_cash_flow")
+        fcf = data.get("free_cashflow")
         market_cap = data.get("market_cap")
 
         # Missing data → impute
@@ -40,6 +41,9 @@ class FCFYieldMetric(Metric):
     def get_name(self) -> str:
         return "FCF Yield (%)"
 
+    def get_key(self) -> str:
+        return "fcf_yield"
+
 class RevenueVolatilityMetric(Metric):
     """
     Revenue Volatility = Std Dev of YoY Revenue Growth Rates
@@ -51,8 +55,8 @@ class RevenueVolatilityMetric(Metric):
     def calculate(self, ticker: str, provider: StockDataProvider) -> Optional[float]:
         revenues = provider.get_annual_revenue_series(ticker)
 
-        # Require sufficient history
-        if revenues is None or len(revenues) < 5:
+        # Require sufficient history (need at least 4 years for 3 growth rates)
+        if revenues is None or len(revenues) < 4:
             return None
 
         # NaN handling
