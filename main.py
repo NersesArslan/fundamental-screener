@@ -3,11 +3,11 @@
 from core.stock_providers import YFinanceProvider
 from experiments.run_business_model import run_business_model_test
 from metrics.core_metrics import get_core_metrics
-
+from universes. semiconductors import ALL_SEMICONDUCTORS
 # ============================================================================
 # CONFIGURATION: Change this to test different business models
 # ============================================================================
-ACTIVE_MODEL = "enterprise_ai"  # Options: "cybersecurity", "ad_platform", 
+ACTIVE_MODEL = "streaming"  # Options: "cybersecurity", "ad_platform", 
                                  # "cloud_infrastructure", "enterprise_saas",
                                  # "enterprise_ai", "hardware_ecosystem",
                                  # "legacy_enterprise", "streaming"
@@ -60,24 +60,24 @@ BUSINESS_MODELS = {
         "universe_var": "HARDWARE_ECOSYSTEM",
         "metrics": "metrics.business_models.hardware_ecosystem",
         "metrics_func": "get_hardware_ecosystem_metrics",
-        "weights": None,  # No weights file yet
-        "weights_var": None,
+        "weights": "industry.business_model_weights.hardware_ecosystem",
+        "weights_var": "HARDWARE_ECOSYSTEM_WEIGHT_MAP",
     },
     "legacy_enterprise": {
         "universe": "universes.legacy_enterprise",
         "universe_var": "LEGACY_ENTERPRISE",
         "metrics": "metrics.business_models.legacy_enterprise",
         "metrics_func": "get_legacy_enterprise_metrics",
-        "weights": None,  # No weights file yet
-        "weights_var": None,
+        "weights": "industry.business_model_weights.legacy_enterprise",
+        "weights_var": "LEGACY_ENTERPRISE_WEIGHT_MAP",
     },
     "streaming": {
         "universe": "universes.streaming",
         "universe_var": "STREAMING",
         "metrics": "metrics.business_models.streaming",
         "metrics_func": "get_streaming_metrics",
-        "weights": None,  # No weights file yet
-        "weights_var": None,
+        "weights":"industry.business_model_weights.streaming",
+        "weights_var": "STREAMING_WEIGHT_MAP"
     },
 }
 
@@ -135,3 +135,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
